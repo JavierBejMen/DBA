@@ -13,7 +13,7 @@ import java.util.ArrayList;
  */
 
 public class GugelCar {
-private ArrayList<ArrayList<int>> map;
+private ArrayList<ArrayList<Integer>> map;
 private String login;
 private String password;
 private String clave_acceso;
@@ -21,7 +21,7 @@ private int numero_mapa;
 private int bateria;
 private int pos_x;
 private int pos_y;
-private ArrayList<float> lectura_escaner;
+private ArrayList<Float> lectura_escaner;
 private Estados estado_actual;
 
 public GugelCar(String aid){
