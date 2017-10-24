@@ -5,6 +5,7 @@
  */
 package gugelcar;
 
+import static gugelcar.Movimientos.REFUEL;
 import java.util.ArrayList;
 
 /**
@@ -13,7 +14,7 @@ import java.util.ArrayList;
  */
 
 public class GugelCar {
-private ArrayList<ArrayList<Integer>> map;
+private ArrayList<ArrayList<Integer>> c;
 private String login;
 private String password;
 private String clave_acceso;
@@ -68,11 +69,11 @@ public void mover(String direccion){
      * @brief El metodo hace tal
      * @autor <ul>
      * 			<li>: prototipo</li>
-     * 			<li> :programación interna </li>
+     * 			<li>@donas11 :programación interna </li>
      *         </ul>
      */
-public void refuel(){
-
+public boolean refuel(){
+    return bateria<=2;
 }
  /**
      * @brief El metodo hace tal
@@ -87,12 +88,35 @@ public void actualizarMapa(){
  /**
      * @brief El metodo hace tal
      * @autor <ul>
-     * 			<li>: prototipo</li>
+     * 			<li>jorge: prototipo</li>
      * 			<li> :programación interna </li>
      *         </ul>
      */
-public void decidir(){
-
+public String decidir(){
+    String decision = null;
+    Movimientos accion;
+    int min_dist = 999999;
+  
+  if(refuel()){
+      accion = REFUEL;
+  }else{
+      int i= pos_x-1;
+      int j= pos_y-1;
+      while(i<pos_x+1){
+          while(j<pos_y+1){
+               if(((map.get(i)).get(j)!=-1 )&& (i != pos_x OR j != pos_y )  &&(min_dist >distancia[i-pos_x][j-pos_y]) ){
+                   min_dist = distancia[i-pos_x][j-pos_y];
+                   accion=i-pos_x+j-pos_y;
+               }
+               j++;
+          }
+          i++;
+      }
+      
+      
+   }
+  return decision;
+    
 }
  /**
      * @brief El metodo hace tal
