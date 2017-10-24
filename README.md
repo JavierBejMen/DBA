@@ -1,2 +1,2 @@
 # DBA
-Repositorio para practicas de asignatura Desarrollo Basado en Agentes
+Repositorio para prácticas de asignatura Desarrollo Basado en Agentes

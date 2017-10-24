@@ -56,11 +56,13 @@ public class main {
 
         GugelCar car = new GugelCar("test");
         car.login();
+
         while (car.estoyEnObjetivo() || car.getEstado_actual() == CRASHED) {
             car.actualizarMapa();
             String direcion = car.decidir();
             car.mover(direcion);
     }
+
 
     }
 }
