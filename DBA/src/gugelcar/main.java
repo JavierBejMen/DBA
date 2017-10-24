@@ -7,7 +7,7 @@ package gugelcar;
 
 import java.awt.Point;
 import java.util.ArrayList;
-
+import static gugelcar.Estados.CRASHED;
 /**
  *
  * @author 
@@ -54,15 +54,13 @@ public class main {
         System.out.println("Prueba punto del GPS: (x=" + punto.x + ", y=" + punto.y + ")");
         
 
-        GugelCar car = new GugelCar();
+        GugelCar car = new GugelCar("test");
         car.login();
-        try {
-            while(car.estoyEnObjetivo() || car.getEstado_actual() == Estados.CRASHED) {
-                car.actualizarMapa();
-                String direcion = car.decidir();
-                car.mover(direcion);
-            }
-        }
+        while (car.estoyEnObjetivo() || car.getEstado_actual() == CRASHED) {
+            car.actualizarMapa();
+            String direcion = car.decidir();
+            car.mover(direcion);
+    }
 
     }
 }

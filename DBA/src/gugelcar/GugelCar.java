@@ -32,11 +32,11 @@ private Estados estado_actual;
      * 			<li> :programación interna </li>
      *         </ul>
      */
-public GugelCar(String aid){
-
-}
+    GugelCar(String aid){
+        
+    }
  /**
-     * @brief El metodo hace tal
+     * @brief El metodo hace ta
      * @autor <ul>
      * 			<li>: prototipo</li>
      * 			<li> :programación interna </li>
