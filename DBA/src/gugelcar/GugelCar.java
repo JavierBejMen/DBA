@@ -24,7 +24,11 @@ private int pos_x;
 private int pos_y;
 private ArrayList<Float> lectura_escaner;
 private Estados estado_actual;
-
+private final int columnastotales = (map.get(0)).size();
+private int posMatriz(int fil,int col){
+    
+          return columnastotales*fil+col;
+}
  /**
      * El metodo hace tal
      * @autor <ul>
@@ -95,7 +99,7 @@ public void actualizarMapa(){
 public String decidir(){
     String decision = null;
     Movimientos accion;
-    int min_dist = 999999;
+    float min_dist = 999999;
   
   if(refuel()){
       accion = REFUEL;
@@ -105,9 +109,9 @@ public String decidir(){
       while(i<pos_x+1){
           while(j<pos_y+1){
               
-               if(((map.get(i)).get(j)!=-1 ) && (i != pos_x || j != pos_y )  &&(min_dist >distancia[i-pos_x][j-pos_y]) ){
-                   min_dist = distancia[i-pos_x][j-pos_y];
-                   accion=i-pos_x+j-pos_y;
+               if(((map.get(i)).get(j)!=-1 ) && (i != pos_x || j != pos_y )  &&(min_dist >lectura_escaner.get(posMatriz(i-pos_x,j-pos_y)))){
+                   min_dist = lectura_escaner.get(posMatriz(i-pos_x,j-pos_y));
+                   //accion=i-pos_x+j-pos_y;
                }
                j++;
           }
