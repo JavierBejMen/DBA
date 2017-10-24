@@ -14,7 +14,7 @@ import java.util.ArrayList;
  */
 
 public class GugelCar {
-private ArrayList<ArrayList<Integer>> c;
+private ArrayList<ArrayList<Integer>> map;
 private String login;
 private String password;
 private String clave_acceso;
@@ -104,7 +104,8 @@ public String decidir(){
       int j= pos_y-1;
       while(i<pos_x+1){
           while(j<pos_y+1){
-               if(((map.get(i)).get(j)!=-1 )&& (i != pos_x OR j != pos_y )  &&(min_dist >distancia[i-pos_x][j-pos_y]) ){
+              
+               if(((map.get(i)).get(j)!=-1 ) && (i != pos_x || j != pos_y )  &&(min_dist >distancia[i-pos_x][j-pos_y]) ){
                    min_dist = distancia[i-pos_x][j-pos_y];
                    accion=i-pos_x+j-pos_y;
                }
