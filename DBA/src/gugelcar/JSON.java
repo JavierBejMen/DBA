@@ -82,6 +82,19 @@ public class JSON {
     }
     
     /**
+     * @brief Obtiene la clave para conectarse al servidor a partir de un string
+     * JSON y lo devuelve.
+     * @param cadena_json Cadena JSON con la clave
+     * @return Clave para realizar el intercambio de mensajes con el controlador
+     */
+    public String decodeClave(String cadena_json){
+        
+        JSONObject obj = new JSONObject(cadena_json);
+        String clave = (String)obj.get("result");
+        return clave;
+    }
+    
+    /**
      * @brief Obtiene una cadena codificada en JSON para recargar batería.
      * @param key Password obtenido en el login del agente
      * @return Cadena codificada.
@@ -89,7 +102,7 @@ public class JSON {
     public String encodeRefuel(String key){
         JSONObject obj = new JSONObject();
         
-        obj.put("command", "refuel");
+        obj.put("command", Movimientos.refuel);
         obj.put("key", key);
         
         return obj.toString();
