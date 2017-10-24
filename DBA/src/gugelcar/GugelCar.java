@@ -101,8 +101,12 @@ public void decidir(){
      * 			<li> :programación interna </li>
      *         </ul>
      */
-public void estoyEnObjetivo(){
-
+public boolean estoyEnObjetivo(){
+    return false;
 }
+
+    public Estados getEstado_actual() {
+        return this.estado_actual;
+    }
 
 }

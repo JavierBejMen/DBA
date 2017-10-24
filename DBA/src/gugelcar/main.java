@@ -52,5 +52,17 @@ public class main {
         String lectura_GPS = "{\"gps\":{\"x\":94, \"y\":94}}";
         Point punto = parser.decodeGPS(lectura_GPS);
         System.out.println("Prueba punto del GPS: (x=" + punto.x + ", y=" + punto.y + ")");
+        
+
+        GugelCar car = new GugelCar();
+        car.login();
+        try {
+            while(car.estoyEnObjetivo() || car.getEstado_actual() == Estados.CRASHED) {
+                car.actualizarMapa();
+                String direcion = car.decidir();
+                car.mover(direcion);
+            }
+        }
+
     }
 }
