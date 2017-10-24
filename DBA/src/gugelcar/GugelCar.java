@@ -28,7 +28,7 @@ private Estados estado_actual;
  /**
      * El metodo hace tal
      * @autor <ul>
-     * 			<li>: prototipo</li>
+     * 			<li>Jorge Echevarria Tello: prototipo</li>
      * 			<li> :programación interna </li>
      *         </ul>
      */
