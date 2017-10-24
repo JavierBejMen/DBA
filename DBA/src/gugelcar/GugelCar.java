@@ -5,59 +5,115 @@
  */
 package gugelcar;
 
-import static gugelcar.Movimientos.REFUEL;
+import es.upv.dsic.gti_ia.core.ACLMessage;
+import es.upv.dsic.gti_ia.core.AgentID;
+import es.upv.dsic.gti_ia.core.AgentsConnection;
+import es.upv.dsic.gti_ia.core.SingleAgent;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author dani
  */
 
-public class GugelCar {
+public class GugelCar extends SingleAgent {
 private ArrayList<ArrayList<Integer>> map;
-private String login;
-private String password;
+private static final String HOST = "isg2.ugr.es";
+private static final String USER = "Boyero";
+private static final String PASSWORD = "Parra";
 private String clave_acceso;
-private int numero_mapa;
+private static final int PORT = 6000;
+private static final String VIRTUAL_HOST = "Cerastes";
 private int bateria;
 private int pos_x;
 private int pos_y;
 private ArrayList<Float> lectura_escaner;
 private Estados estado_actual;
-private final int columnastotales = (map.get(0)).size();
-private int posMatriz(int fil,int col){
-    
-          return columnastotales*fil+col;
-}
+private final JSON json;
+
  /**
      * El metodo hace tal
+     * @param aid
+     * @throws java.lang.Exception
      * @autor <ul>
      * 			<li>Jorge Echevarria Tello: prototipo</li>
      * 			<li> :programación interna </li>
      *         </ul>
      */
-    GugelCar(String aid){
-        
-    }
+public GugelCar(AgentID aid) throws Exception{
+    super(aid);
+    map = new ArrayList();
+    lectura_escaner = new ArrayList();
+    json = new JSON();
+}
+
+@Override
+public void execute(){
+    login("map1");
+    logout();
+}
+
+public static void connect(){
+    AgentsConnection.connect("isg2.ugr.es",PORT,VIRTUAL_HOST,USER,PASSWORD,false);
+}
  /**
-     * @brief El metodo hace ta
+     * @param world
+     * @brief El metodo hace tal
      * @autor <ul>
      * 			<li>: prototipo</li>
-     * 			<li> :programación interna </li>
+     * 			<li>Daniel Díaz Pareja :programación interna </li>
      *         </ul>
      */
-public void login(){
+public void login(String world){
+    String nombre = this.getAid().getLocalName();
+    String mensaje = json.encodeLoginControlador(world, nombre, nombre, nombre, nombre);
+    enviarMensajeControlador(mensaje);
+    String respuesta = recibirMensajeControlador();
+    clave_acceso = json.decodeClave(respuesta);
+}
 
+/**
+ * @author Daniel Díaz Pareja
+ * @brief Envía un mensaje al controlador y devuelve la respuesta
+ * @param mensaje Mensaje a enviar al controlador
+ */
+public void enviarMensajeControlador(String mensaje){
+    ACLMessage outbox = new ACLMessage();
+    outbox.setSender(this.getAid());
+    outbox.setReceiver(new AgentID(VIRTUAL_HOST));
+    outbox.setContent(mensaje);
+    this.send(outbox);
+}
+
+/**
+ * @brief
+ * @return Mensaje del controlador
+ */
+public String recibirMensajeControlador(){
+    String mensaje = "vacio";
+    try {
+        ACLMessage inbox=this.receiveACLMessage();
+        mensaje=inbox.getContent();
+        System.out.println("\nRecibido mensaje "
+                +inbox.getContent()+" de "+inbox.getSender().getLocalName());
+        return mensaje;
+    } catch (InterruptedException ex) {
+        System.out.println("Error al recibir mensaje");
+    }
+    return mensaje;
 }
  /**
      * @brief El metodo hace tal
      * @autor <ul>
      * 			<li>: prototipo</li>
-     * 			<li> :programación interna </li>
+     * 			<li>Daniel Díaz Pareja:programación interna </li>
      *         </ul>
      */
 public void logout(){
-
+    String mensaje = json.encodeLogout(clave_acceso);
+    enviarMensajeControlador(mensaje);
 }
  /**
      * @brief El metodo hace tal
@@ -76,8 +132,8 @@ public void mover(String direccion){
      * 			<li>@donas11 :programación interna </li>
      *         </ul>
      */
-public boolean refuel(){
-    return bateria<=2;
+public void refuel(){
+    this.enviarMensajeControlador(json.encodeRefuel(clave_acceso));
 }
  /**
      * @brief El metodo hace tal
@@ -101,8 +157,8 @@ public String decidir(){
     Movimientos accion;
     float min_dist = 999999;
   
-  if(refuel()){
-      accion = REFUEL;
+  if(bateria ==1){
+      accion = Movimientos.REFUEL;
   }else{
       int i= pos_x-1;
       int j= pos_y-1;

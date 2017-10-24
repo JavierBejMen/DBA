@@ -5,8 +5,12 @@
  */
 package gugelcar;
 
+import es.upv.dsic.gti_ia.core.AgentID;
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import static gugelcar.Estados.CRASHED;
 /**
  *
@@ -21,7 +25,7 @@ public class main {
         /*
          * Prueba de la clase JSON.
          */
-        JSON parser = new JSON();
+        /*JSON parser = new JSON();
         
         String login = parser.encodeLoginControlador("map1", "vehículo", 
                 "vehículo", "vehículo", "");
@@ -51,18 +55,13 @@ public class main {
         
         String lectura_GPS = "{\"gps\":{\"x\":94, \"y\":94}}";
         Point punto = parser.decodeGPS(lectura_GPS);
-        System.out.println("Prueba punto del GPS: (x=" + punto.x + ", y=" + punto.y + ")");
-        
-
-        GugelCar car = new GugelCar("test");
-        car.login();
-
-        while (car.estoyEnObjetivo() || car.getEstado_actual() == CRASHED) {
-            car.actualizarMapa();
-            String direcion = car.decidir();
-            car.mover(direcion);
-    }
-
-
+        System.out.println("Prueba punto del GPS: (x=" + punto.x + ", y=" + punto.y + ")");*/
+        GugelCar.connect();
+        try {
+            GugelCar c = new GugelCar(new AgentID("coche"));
+            c.run();
+        } catch (Exception ex) {
+            System.out.println("Error al crear el agente.");
+        }
     }
 }
