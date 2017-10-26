@@ -130,18 +130,38 @@ public void logout(){
  /**
      * @brief El metodo hace tal
      * @autor <ul>
-     * 			<li>: prototipo</li>
-     * 			<li> :programación interna </li>
+     * 			<li>jorge : prototipo</li>
+     * 			<li>@donas11 :programación interna </li>
      *         </ul>
      */
 public void mover(String direccion){
+    switch(direccion){
+          case ("RF"): 
+          break;
+          case ("NE"):    
+          break;
+          case ("N"):
+          break;
+          case ("NW"):
+          break;
+          case ("E"):
+          break;
+          case ("W"):
+          break;
+          case ("SE"):
+          break;
+          case ("S"):
+          break;
+          case ("SW"):
+          break;
+      }
 
 }
  /**
      * @brief El metodo hace tal
      * @autor <ul>
-     * 			<li>: prototipo</li>
-     * 			<li>@donas11 :programación interna </li>
+     * 			<li>jorge: prototipo</li>
+     * 			<li>:programación interna </li>
      *         </ul>
      */
 public void refuel(){
@@ -150,7 +170,7 @@ public void refuel(){
  /**
      * @brief El metodo hace tal
      * @autor <ul>
-     * 			<li>: prototipo</li>
+     * 			<li>jorge : prototipo</li>
      * 			<li> :programación interna </li>
      *         </ul>
      */
@@ -161,16 +181,17 @@ public void actualizarMapa(){
      * @brief El metodo hace tal
      * @autor <ul>
      * 			<li>jorge: prototipo</li>
-     * 			<li> :programación interna </li>
+     * 			<li>@donas11 :programación interna </li>
      *         </ul>
      */
 public String decidir(){
     String decision = null;
-    Movimientos accion;
+    //Movimientos accion;
     float min_dist = 999999;
   
   if(bateria ==1){
-      accion = Movimientos.refuel;
+      //accion = Movimientos.refuel;
+      decision="RF";
   }else{
       /*int i= pos_x-1;
       int j= pos_y-1;
@@ -185,60 +206,61 @@ public String decidir(){
           }
           i++;
       }*/
-      float menor=101;
-      int filaMenor=0;
-      int colMenor=0;
-      int filaMen=0;
-      int colMen=0;
-      for (int i = 1; i <= 3; i++) {  //
-            for (int j = 1; j <= 3; j++) {
-                if (lectura_escaner.get(posMatriz(i,j)) <= menor) {
-                    menor = lectura_escaner.get(posMatriz(i, j));
-                    filaMen=filaMenor;
-                    colMen=colMenor;
-                    filaMenor = i;
-                    colMenor = j;
-                } 
-            }           
-      }
-      
-      if((map.get(filaMenor)).get(colMenor) == 1){
-          filaMenor = filaMen;
-          colMenor = colMen;
-      }
-      switch(filaMenor){
-          case (1):
-                switch(colMenor){
-                    case (1): decision="NE";
-                    break;
-                    case (2): decision="N";
-                    break;
-                    case (3): decision="NW";
-                    break;
-                }
-          break;
-          case (2):
-                switch(colMenor){
-                    case (1): decision="E";
-                    break;
-                    case (2): decision="OBJ";//estamos en el objetivo
-                    break;
-                    case (3): decision="W";
-                    break;
-                }
-          break;
-          case (3):
-                switch(colMenor){
-                    case (1): decision="SE";
-                    break;
-                    case (2): decision="S";
-                    break;
-                    case (3): decision="SW";
-                    break;
-                }
-          break;
-      }
-      
+      if(decision!="RF"){
+        float menor=101;
+        int filaMenor=0;
+        int colMenor=0;
+        int filaMen=0;
+        int colMen=0;
+        for (int i = 1; i <= 3; i++) {  //
+              for (int j = 1; j <= 3; j++) {
+                  if (lectura_escaner.get(posMatriz(i,j)) <= menor) {
+                      menor = lectura_escaner.get(posMatriz(i, j));
+                      filaMen=filaMenor;
+                      colMen=colMenor;
+                      filaMenor = i;
+                      colMenor = j;
+                  } 
+              }           
+        }
+
+        if((map.get(filaMenor)).get(colMenor) == 1){
+            filaMenor = filaMen;
+            colMenor = colMen;
+        }
+        switch(filaMenor){
+            case (1):
+                  switch(colMenor){
+                      case (1): decision="NE";
+                      break;
+                      case (2): decision="N";
+                      break;
+                      case (3): decision="NW";
+                      break;
+                  }
+            break;
+            case (2):
+                  switch(colMenor){
+                      case (1): decision="E";
+                      break;
+                      case (2): decision="OBJ";//estamos en el objetivo
+                      break;
+                      case (3): decision="W";
+                      break;
+                  }
+            break;
+            case (3):
+                  switch(colMenor){
+                      case (1): decision="SE";
+                      break;
+                      case (2): decision="S";
+                      break;
+                      case (3): decision="SW";
+                      break;
+                  }
+            break;
+        }
+      }  
       
       
       
@@ -250,11 +272,15 @@ public String decidir(){
      * @brief El metodo hace tal
      * @autor <ul>
      * 			<li>jorge: prototipo</li>
-     * 			<li> :programación interna </li>
+     * 			<li>@donas11 :programación interna </li>
      *         </ul>
      */
 public boolean estoyEnObjetivo(){
-    return false;
+    boolean obj=false;
+    if((map.get(pos_x)).get(pos_y) == 1){
+        obj=true;
+    }
+    return obj;
 }
 
     public Estados getEstado_actual() {
