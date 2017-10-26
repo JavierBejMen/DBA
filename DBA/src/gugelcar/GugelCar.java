@@ -29,6 +29,18 @@ private static final String VIRTUAL_HOST = "Cerastes";
 private int bateria;
 private int pos_x;
 private int pos_y;
+ /**
+     * Función auxiliar para saber posición en el Arraylist 
+     * @param fil número de fila en la matriz
+     * @param col número de fila en la matriz
+     * @autor <ul>
+     * 			<li>@donas11 : prototipo</li>
+     * 			<li>@donas11 :programación interna </li>
+     *         </ul>
+     */
+private int posMatriz(int fil,int col){
+          return ((map.get(0).size())*fil)+col;
+    }
 private ArrayList<Float> lectura_escaner;
 private Estados estado_actual;
 private final JSON json;
@@ -158,9 +170,9 @@ public String decidir(){
     float min_dist = 999999;
   
   if(bateria ==1){
-      accion = Movimientos.REFUEL;
+      accion = Movimientos.refuel;
   }else{
-      int i= pos_x-1;
+      /*int i= pos_x-1;
       int j= pos_y-1;
       while(i<pos_x+1){
           while(j<pos_y+1){
@@ -172,7 +184,62 @@ public String decidir(){
                j++;
           }
           i++;
+      }*/
+      float menor=101;
+      int filaMenor=0;
+      int colMenor=0;
+      int filaMen=0;
+      int colMen=0;
+      for (int i = 1; i <= 3; i++) {  //
+            for (int j = 1; j <= 3; j++) {
+                if (lectura_escaner.get(posMatriz(i,j)) <= menor) {
+                    menor = lectura_escaner.get(posMatriz(i, j));
+                    filaMen=filaMenor;
+                    colMen=colMenor;
+                    filaMenor = i;
+                    colMenor = j;
+                } 
+            }           
       }
+      
+      if((map.get(filaMenor)).get(colMenor) == 1){
+          filaMenor = filaMen;
+          colMenor = colMen;
+      }
+      switch(filaMenor){
+          case (1):
+                switch(colMenor){
+                    case (1): decision="NE";
+                    break;
+                    case (2): decision="N";
+                    break;
+                    case (3): decision="NW";
+                    break;
+                }
+          break;
+          case (2):
+                switch(colMenor){
+                    case (1): decision="E";
+                    break;
+                    case (2): decision="OBJ";//estamos en el objetivo
+                    break;
+                    case (3): decision="W";
+                    break;
+                }
+          break;
+          case (3):
+                switch(colMenor){
+                    case (1): decision="SE";
+                    break;
+                    case (2): decision="S";
+                    break;
+                    case (3): decision="SW";
+                    break;
+                }
+          break;
+      }
+      
+      
       
       
    }
