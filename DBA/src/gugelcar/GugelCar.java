@@ -29,6 +29,11 @@ private static final String VIRTUAL_HOST = "Cerastes";
 private int bateria;
 private int pos_x;
 private int pos_y;
+private ArrayList<Float> lectura_escaner;
+private ArrayList<Integer> lectura_radar;
+private Estados estado_actual;
+private final JSON json;
+
  /**
      * Función auxiliar para saber posición en el Arraylist 
      * @param fil número de fila en la matriz
@@ -41,10 +46,6 @@ private int pos_y;
 private int posMatriz(int fil,int col){
           return ((map.get(0).size())*fil)+col;
     }
-private ArrayList<Float> lectura_escaner;
-private Estados estado_actual;
-private final JSON json;
-
  /**
      * El metodo hace tal
      * @param aid
@@ -63,7 +64,26 @@ public GugelCar(AgentID aid) throws Exception{
 
 @Override
 public void execute(){
+    
     login("map1");
+    //recibirMensajeControlador();
+    do {
+        String radar = recibirMensajeControlador();
+        String scanner = recibirMensajeControlador();
+        String gps = recibirMensajeControlador();
+        String battery = recibirMensajeControlador();
+    
+        this.lectura_escaner = json.decodeScanner(scanner);
+        this.lectura_radar = json.decodeRadar(radar);
+        this.pos_x = json.decodeGPS(gps).x;
+        this.pos_y = json.decodeGPS(gps).y;
+        this.bateria = json.decodeBattery(battery);
+        
+        //mover(decidir());
+        this.enviarMensajeControlador(json.encodeMove(Movimientos.moveSW, this.clave_acceso));
+    } while (!this.estoyEnObjetivo());
+    
+    //this.clave_acceso = "utov20x6";
     logout();
 }
 
@@ -83,6 +103,9 @@ public void login(String world){
     String mensaje = json.encodeLoginControlador(world, nombre, nombre, nombre, nombre);
     enviarMensajeControlador(mensaje);
     String respuesta = recibirMensajeControlador();
+    if (respuesta.contains("trace"))
+        respuesta = recibirMensajeControlador();
+    
     clave_acceso = json.decodeClave(respuesta);
 }
 
@@ -136,10 +159,11 @@ public void logout(){
      */
 public void mover(String direccion){
     Movimientos envio = null;
-    switch(direccion){
-          case ("RF"):
-               envio=Movimientos.refuel;
-          break;
+    if ("RF".equals(direccion)){
+        envio=Movimientos.refuel;
+        this.enviarMensajeControlador(json.encodeRefuel(this.clave_acceso));
+    } else {
+        switch(direccion){  
           case ("NE"):    
               envio=Movimientos.moveNE;
           break;
@@ -164,9 +188,11 @@ public void mover(String direccion){
           case ("SW"):
              envio=Movimientos.moveSW;
           break;
+          
+          
       }
-    this.enviarMensajeControlador(json.encodeMove(envio, this.clave_acceso));
-
+        this.enviarMensajeControlador(json.encodeRefuel(this.clave_acceso));
+    }
 }
  /**
      * @brief El metodo hace tal
@@ -218,7 +244,7 @@ public String decidir(){
           i++;
       }*/
       if(decision!="RF"){
-        float menor=101;
+        float menor=9999;
         int filaMenor=0;
         int colMenor=0;
         int filaMen=0;
@@ -235,7 +261,7 @@ public String decidir(){
               }           
         }
 
-        if((map.get(filaMenor)).get(colMenor) == 1){
+        if((lectura_radar.get(posMatriz(filaMenor,colMenor))) == 1){
             filaMenor = filaMen;
             colMenor = colMen;
         }
@@ -288,9 +314,12 @@ public String decidir(){
      */
 public boolean estoyEnObjetivo(){
     boolean obj=false;
-    if((map.get(pos_x)).get(pos_y) == 1){
+    if(lectura_radar.get(posMatriz(pos_x,pos_y)) == 2){
         obj=true;
+        System.out.println("Estoy en objetivo.");
     }
+    System.out.println("PosMatriz("+this.pos_x + ","+this.pos_y+ "): " 
+            + posMatriz(pos_x,pos_y)+ "  Lectura: " +lectura_radar.get(posMatriz(pos_x,pos_y)));
     return obj;
 }
 
