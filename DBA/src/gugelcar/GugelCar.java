@@ -135,26 +135,37 @@ public void logout(){
      *         </ul>
      */
 public void mover(String direccion){
+    Movimientos envio = null;
     switch(direccion){
-          case ("RF"): 
+          case ("RF"):
+               envio=Movimientos.refuel;
           break;
           case ("NE"):    
+              envio=Movimientos.moveNE;
           break;
           case ("N"):
+              envio=Movimientos.moveN;
           break;
           case ("NW"):
+              envio=Movimientos.moveNW;
           break;
           case ("E"):
+              envio=Movimientos.moveE;
           break;
           case ("W"):
+              envio=Movimientos.moveW;
           break;
           case ("SE"):
+              envio=Movimientos.moveSE;
           break;
           case ("S"):
+              envio=Movimientos.moveS;
           break;
           case ("SW"):
+             envio=Movimientos.moveSW;
           break;
       }
+    this.enviarMensajeControlador(json.encodeMove(envio, this.clave_acceso));
 
 }
  /**
