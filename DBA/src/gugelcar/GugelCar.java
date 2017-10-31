@@ -66,14 +66,15 @@ public GugelCar(AgentID aid) throws Exception{
 
 @Override
 public void execute(){
-    
-    login("map1");
+    String radar, scanner, gps, battery, traza, mapa;
+    mapa = "map1";
+    login(mapa);
     
     do {
-        String radar = recibirMensajeControlador();
-        String scanner = recibirMensajeControlador();
-        String gps = recibirMensajeControlador();
-        String battery = recibirMensajeControlador();
+        radar = recibirMensajeControlador();
+        scanner = recibirMensajeControlador();
+        gps = recibirMensajeControlador();
+        battery = recibirMensajeControlador();
     
         this.lectura_escaner = json.decodeScanner(scanner);
         this.lectura_radar = json.decodeRadar(radar);
@@ -85,9 +86,22 @@ public void execute(){
         this.enviarMensajeControlador(json.encodeMove(Movimientos.moveSW, this.clave_acceso));
         this.estado_actual = json.decodeEstado(recibirMensajeControlador());
         pasos++;
-    } while (!this.estoyEnObjetivo());
-    
+    } while (!estoyEnObjetivo());
+
     logout();
+    // Cuando se hace el logout se quedan estos mensajes encolados, los recibo
+    // todos para poder conseguir el último mensaje: la traza
+    radar = recibirMensajeControlador();
+    scanner = recibirMensajeControlador();
+    gps = recibirMensajeControlador();
+    battery = recibirMensajeControlador();
+    this.estado_actual = json.decodeEstado(recibirMensajeControlador());
+    radar = recibirMensajeControlador();
+    scanner = recibirMensajeControlador();
+    gps = recibirMensajeControlador();
+    battery = recibirMensajeControlador();
+    traza = recibirMensajeControlador();
+    json.guardarTraza(traza, mapa+".png");
 }
 
 public static void connect(){
