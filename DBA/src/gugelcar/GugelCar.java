@@ -33,6 +33,7 @@ private ArrayList<Float> lectura_escaner;
 private ArrayList<Integer> lectura_radar;
 private Estados estado_actual;
 private final JSON json;
+private int pasos;
 
  /**
      * Función auxiliar para saber posición en el Arraylist 
@@ -60,13 +61,14 @@ public GugelCar(AgentID aid) throws Exception{
     map = new ArrayList();
     lectura_escaner = new ArrayList();
     json = new JSON();
+    pasos = 0;
 }
 
 @Override
 public void execute(){
     
     login("map1");
-    //recibirMensajeControlador();
+    
     do {
         String radar = recibirMensajeControlador();
         String scanner = recibirMensajeControlador();
@@ -81,9 +83,10 @@ public void execute(){
         
         //mover(decidir());
         this.enviarMensajeControlador(json.encodeMove(Movimientos.moveSW, this.clave_acceso));
+        this.estado_actual = json.decodeEstado(recibirMensajeControlador());
+        pasos++;
     } while (!this.estoyEnObjetivo());
     
-    //this.clave_acceso = "utov20x6";
     logout();
 }
 
@@ -132,8 +135,7 @@ public String recibirMensajeControlador(){
         ACLMessage inbox=this.receiveACLMessage();
         mensaje=inbox.getContent();
         System.out.println("\nRecibido mensaje "
-                +inbox.getContent()+" de "+inbox.getSender().getLocalName());
-        return mensaje;
+            +inbox.getContent()+" de "+inbox.getSender().getLocalName());
     } catch (InterruptedException ex) {
         System.out.println("Error al recibir mensaje");
     }
@@ -159,10 +161,9 @@ public void logout(){
      */
 public void mover(String direccion){
     Movimientos envio = null;
-    if ("RF".equals(direccion)){
-        envio=Movimientos.refuel;
-        this.enviarMensajeControlador(json.encodeRefuel(this.clave_acceso));
-    } else {
+    if ("RF".equals(direccion))
+        refuel();
+    else {
         switch(direccion){  
           case ("NE"):    
               envio=Movimientos.moveNE;
@@ -191,7 +192,7 @@ public void mover(String direccion){
           
           
       }
-        this.enviarMensajeControlador(json.encodeRefuel(this.clave_acceso));
+        this.enviarMensajeControlador(json.encodeMove(envio,this.clave_acceso));
     }
 }
  /**
@@ -314,17 +315,12 @@ public String decidir(){
      */
 public boolean estoyEnObjetivo(){
     boolean obj=false;
-    if(lectura_radar.get(posMatriz(pos_x,pos_y)) == 2){
+    if(lectura_radar.get(12) == 2){
         obj=true;
-        System.out.println("Estoy en objetivo.");
+        System.out.println("Estoy en objetivo. Pasos dados: "+pasos);
     }
-    System.out.println("PosMatriz("+this.pos_x + ","+this.pos_y+ "): " 
-            + posMatriz(pos_x,pos_y)+ "  Lectura: " +lectura_radar.get(posMatriz(pos_x,pos_y)));
+
     return obj;
 }
-
-    public Estados getEstado_actual() {
-        return this.estado_actual;
-    }
 
 }
