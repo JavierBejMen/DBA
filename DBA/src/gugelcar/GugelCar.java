@@ -40,7 +40,7 @@ private int pasos;
      * @param fil número de fila en la matriz
      * @param col número de fila en la matriz
      * @autor <ul>
-     * 			<li>@donas11 : prototipo</li>
+     * 			<li>@donas11 :prototipo</li>
      * 			<li>@donas11 :programación interna </li>
      *         </ul>
      */
@@ -53,7 +53,7 @@ private int posMatriz(int fil,int col){
      * @throws java.lang.Exception
      * @autor <ul>
      * 			<li>Jorge Echevarria Tello: prototipo</li>
-     * 			<li> :programación interna </li>
+     * 			<li>Daniel :programación interna </li>
      *         </ul>
      */
 public GugelCar(AgentID aid) throws Exception{
@@ -64,6 +64,15 @@ public GugelCar(AgentID aid) throws Exception{
     pasos = 0;
 }
 
+ /**
+     * 
+     * @param 
+     * @throws java.lang.Exception
+     * @autor <ul>
+     * 			<li>Emilien: programación inicial </li>
+     * 			<li>Daniel :programación interna </li>
+     *         </ul>
+     */
 @Override
 public void execute(){
     String radar, scanner, gps, battery, traza, mapa;
@@ -111,7 +120,7 @@ public static void connect(){
      * @param world
      * @brief El metodo hace tal
      * @autor <ul>
-     * 			<li>: prototipo</li>
+     * 			<li>jorge: prototipo</li>
      * 			<li>Daniel Díaz Pareja :programación interna </li>
      *         </ul>
      */
@@ -139,10 +148,14 @@ public void enviarMensajeControlador(String mensaje){
     this.send(outbox);
 }
 
-/**
- * @brief
- * @return Mensaje del controlador
- */
+ /**
+     * @brief El metodo hace tal
+     * @autor <ul>
+     * 			<li>jorge : prototipo</li>
+     * 			<li>Daniel :programación interna </li>
+     *         </ul>
+     * @return Mensaje del controlador
+     */
 public String recibirMensajeControlador(){
     String mensaje = "vacio";
     try {
@@ -158,7 +171,7 @@ public String recibirMensajeControlador(){
  /**
      * @brief El metodo hace tal
      * @autor <ul>
-     * 			<li>: prototipo</li>
+     * 			<li>jorge: prototipo</li>
      * 			<li>Daniel Díaz Pareja:programación interna </li>
      *         </ul>
      */
@@ -234,6 +247,7 @@ public void actualizarMapa(){
      * @autor <ul>
      * 			<li>jorge: prototipo</li>
      * 			<li>@donas11 :programación interna </li>
+     * 			<li>Javier :idea inicial</li>
      *         </ul>
      */
 public String decidir(){

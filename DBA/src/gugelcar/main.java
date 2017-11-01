@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 import static gugelcar.Estados.CRASHED;
 /**
  *
- * @author 
+ * @author Daniel
  */
 public class main {
     
