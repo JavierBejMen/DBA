@@ -76,7 +76,7 @@ public GugelCar(AgentID aid) throws Exception{
 @Override
 public void execute(){
     String radar, scanner, gps, battery, traza, mapa;
-    mapa = "map1";
+    mapa = "map5";
     login(mapa);
     
     do {
@@ -92,7 +92,7 @@ public void execute(){
         this.bateria = json.decodeBattery(battery);
 
         decidir();
-        //this.enviarMensajeControlador(json.encodeMove(Movimientos.moveSW, this.clave_acceso));
+
         this.estado_actual = json.decodeEstado(recibirMensajeControlador());
         pasos++;
         
@@ -265,65 +265,65 @@ public void actualizarMapa(){
      *         </ul>
      */
 public void decidir(){
-    String decision = null;
     Movimientos mover = null;
-  
+    
   if(bateria == 1){
       mover = Movimientos.refuel;
   }else{
       float menor = 9999;
-      int filaMenor=0;
-      int colMenor=0;
-      for (int i = 1; i <= 3; i++) {
-            for (int j = 1; j <= 3; j++) {
-              if((lectura_radar.get(posMatriz(i,j))) != 1){
-                if (lectura_escaner.get(posMatriz(i,j)) <= menor) {
-                    menor = lectura_escaner.get(posMatriz(i, j));
-                    filaMenor = i;
-                    colMenor = j;
-                } 
+      int movimiento=0;
+      for (int i = 6; i < 9; i++) {
+              if(!(lectura_radar.get(i).equals(1))){
+                if (lectura_escaner.get(i) <= menor) {
+                    menor = lectura_escaner.get(i);
+                    movimiento = i;
               }
             }           
       }
+      for (int i = 11; i < 14; i++) {
+              if(!(lectura_radar.get(i).equals(1))){
+                if (lectura_escaner.get(i) <= menor && i!=12) {
+        
+                    menor = lectura_escaner.get(i);
+                    movimiento = i;
 
-      switch(filaMenor){
-          case (1):
-                switch(colMenor){
-                    case (1): mover = Movimientos.moveNE;
-                    break;
-                    case (2): mover = Movimientos.moveN;
-                    break;
-                    case (3): mover = Movimientos.moveNW;
-                    break;
-                }
-          break;
-          case (2):
-                switch(colMenor){
-                    case (1): mover=Movimientos.moveE;
-                    break;
-                    case (2): System.out.println("\n\nMe quedo quieto");
-                    break;
-                    case (3): mover=Movimientos.moveW;
-                    break;
-                }
-          break;
-          case (3):
-                switch(colMenor){
-                    case (1): mover= Movimientos.moveSE;
-                    break;
-                    case (2): mover=Movimientos.moveS;
-                    break;
-                    case (3): mover=Movimientos.moveSW;
-                    break;
-                }
-          break;
-      }  
+              }
+            }           
+      }
+      for (int i = 16; i < 19; i++) {
+              if(!(lectura_radar.get(i).equals(1))){
+                if (lectura_escaner.get(i) <= menor) {
+                    menor = lectura_escaner.get(i);
+                    movimiento = i;
+
+              }
+            }           
+      }
+      
+      switch(movimiento){
+        case (8): mover = Movimientos.moveNE;
+        break;
+        case (7): mover = Movimientos.moveN;
+        break;
+        case (6): mover = Movimientos.moveNW;
+        break;
+        case (13): mover=Movimientos.moveE;
+        break;
+        case (12): System.out.println("\n\nMe quedo quieto");
+        break;
+        case (11): mover=Movimientos.moveW;
+        break;
+        case (18): mover= Movimientos.moveSE;
+        break;
+        case (17): mover=Movimientos.moveS;
+        break;
+        case (16): mover=Movimientos.moveSW;
+        break;
+      
    }
-  System.out.println("\n\n\nDecision: "+mover);
+  }
   this.enviarMensajeControlador(json.encodeMove(mover,this.clave_acceso));
 
-  //return mover;
-    
 }
  /**
      * @brief El metodo hace tal
