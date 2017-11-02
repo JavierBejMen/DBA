@@ -48,7 +48,7 @@ private int posMatriz(int fil,int col){
           return ((map.get(0).size())*fil)+col;
     }
  /**
-     * El metodo hace tal
+     * Constructor
      * @param aid
      * @throws java.lang.Exception
      * @autor <ul>
@@ -90,11 +90,12 @@ public void execute(){
         this.pos_x = json.decodeGPS(gps).x;
         this.pos_y = json.decodeGPS(gps).y;
         this.bateria = json.decodeBattery(battery);
-        
-        //mover(decidir());
-        this.enviarMensajeControlador(json.encodeMove(Movimientos.moveSW, this.clave_acceso));
+
+        decidir();
+        //this.enviarMensajeControlador(json.encodeMove(Movimientos.moveSW, this.clave_acceso));
         this.estado_actual = json.decodeEstado(recibirMensajeControlador());
         pasos++;
+        
     } while (!estoyEnObjetivo());
 
     logout();
@@ -113,14 +114,21 @@ public void execute(){
     json.guardarTraza(traza, mapa+".png");
 }
 
+/**
+     * @brief Crea conexión con el servidor
+     * @autor <ul>
+     * 			<li>Jorge: prototipo</li>
+     * 			<li>Daniel Díaz Pareja :programación interna </li>
+     *         </ul>
+     */
 public static void connect(){
     AgentsConnection.connect("isg2.ugr.es",PORT,VIRTUAL_HOST,USER,PASSWORD,false);
 }
  /**
      * @param world
-     * @brief El metodo hace tal
+     * @brief Sirve para hacer login en un mapa
      * @autor <ul>
-     * 			<li>jorge: prototipo</li>
+     * 			<li>Jorge: prototipo</li>
      * 			<li>Daniel Díaz Pareja :programación interna </li>
      *         </ul>
      */
@@ -149,9 +157,9 @@ public void enviarMensajeControlador(String mensaje){
 }
 
  /**
-     * @brief El metodo hace tal
+     * @brief Recibe mensajes del controlador
      * @autor <ul>
-     * 			<li>jorge : prototipo</li>
+     * 			<li>Jorge : prototipo</li>
      * 			<li>Daniel :programación interna </li>
      *         </ul>
      * @return Mensaje del controlador
@@ -169,9 +177,9 @@ public String recibirMensajeControlador(){
     return mensaje;
 }
  /**
-     * @brief El metodo hace tal
+     * @brief Método para hacer logout
      * @autor <ul>
-     * 			<li>jorge: prototipo</li>
+     * 			<li>Jorge: prototipo</li>
      * 			<li>Daniel Díaz Pareja:programación interna </li>
      *         </ul>
      */
@@ -179,19 +187,23 @@ public void logout(){
     String mensaje = json.encodeLogout(clave_acceso);
     enviarMensajeControlador(mensaje);
 }
+
+
  /**
-     * @brief El metodo hace tal
+     * @brief Metodo que en función de la dirección a la que deba moverse se escoge su enum correspondiente
      * @autor <ul>
-     * 			<li>jorge : prototipo</li>
+     * 			<li>Jorge : prototipo</li>
      * 			<li>@donas11 :programación interna </li>
      *         </ul>
      */
-public void mover(String direccion){
-    Movimientos envio = null;
-    if ("RF".equals(direccion))
+/*public void mover(Movimientos move){
+    //Movimientos envio = null;
+    if (Movimientos.refuel.equals(move)){
         refuel();
-    else {
-        switch(direccion){  
+          System.out.println("\n\nEstoy en mover refuel");
+
+    }else {
+      /*  switch(direccion){  
           case ("NE"):    
               envio=Movimientos.moveNE;
           break;
@@ -216,16 +228,18 @@ public void mover(String direccion){
           case ("SW"):
              envio=Movimientos.moveSW;
           break;
-          
-          
       }
-        this.enviarMensajeControlador(json.encodeMove(envio,this.clave_acceso));
+          System.out.println("\n\nEstoy en mover en movimientos");
+
+        this.enviarMensajeControlador(json.encodeMove(move,this.clave_acceso));
     }
 }
+*/
+
  /**
      * @brief El metodo hace tal
      * @autor <ul>
-     * 			<li>jorge: prototipo</li>
+     * 			<li>Jorge: prototipo</li>
      * 			<li>:programación interna </li>
      *         </ul>
      */
@@ -250,88 +264,65 @@ public void actualizarMapa(){
      * 			<li>Javier :idea inicial</li>
      *         </ul>
      */
-public String decidir(){
+public void decidir(){
     String decision = null;
-    //Movimientos accion;
-    float min_dist = 999999;
+    Movimientos mover = null;
   
-  if(bateria ==1){
-      //accion = Movimientos.refuel;
-      decision="RF";
+  if(bateria == 1){
+      mover = Movimientos.refuel;
   }else{
-      /*int i= pos_x-1;
-      int j= pos_y-1;
-      while(i<pos_x+1){
-          while(j<pos_y+1){
-              
-               if(((map.get(i)).get(j)!=-1 ) && (i != pos_x || j != pos_y )  &&(min_dist >lectura_escaner.get(posMatriz(i-pos_x,j-pos_y)))){
-                   min_dist = lectura_escaner.get(posMatriz(i-pos_x,j-pos_y));
-                   //accion=i-pos_x+j-pos_y;
-               }
-               j++;
-          }
-          i++;
-      }*/
-      if(decision!="RF"){
-        float menor=9999;
-        int filaMenor=0;
-        int colMenor=0;
-        int filaMen=0;
-        int colMen=0;
-        for (int i = 1; i <= 3; i++) {  //
-              for (int j = 1; j <= 3; j++) {
-                  if (lectura_escaner.get(posMatriz(i,j)) <= menor) {
-                      menor = lectura_escaner.get(posMatriz(i, j));
-                      filaMen=filaMenor;
-                      colMen=colMenor;
-                      filaMenor = i;
-                      colMenor = j;
-                  } 
-              }           
-        }
+      float menor = 9999;
+      int filaMenor=0;
+      int colMenor=0;
+      for (int i = 1; i <= 3; i++) {
+            for (int j = 1; j <= 3; j++) {
+              if((lectura_radar.get(posMatriz(i,j))) != 1){
+                if (lectura_escaner.get(posMatriz(i,j)) <= menor) {
+                    menor = lectura_escaner.get(posMatriz(i, j));
+                    filaMenor = i;
+                    colMenor = j;
+                } 
+              }
+            }           
+      }
 
-        if((lectura_radar.get(posMatriz(filaMenor,colMenor))) == 1){
-            filaMenor = filaMen;
-            colMenor = colMen;
-        }
-        switch(filaMenor){
-            case (1):
-                  switch(colMenor){
-                      case (1): decision="NE";
-                      break;
-                      case (2): decision="N";
-                      break;
-                      case (3): decision="NW";
-                      break;
-                  }
-            break;
-            case (2):
-                  switch(colMenor){
-                      case (1): decision="E";
-                      break;
-                      case (2): decision="OBJ";//estamos en el objetivo
-                      break;
-                      case (3): decision="W";
-                      break;
-                  }
-            break;
-            case (3):
-                  switch(colMenor){
-                      case (1): decision="SE";
-                      break;
-                      case (2): decision="S";
-                      break;
-                      case (3): decision="SW";
-                      break;
-                  }
-            break;
-        }
+      switch(filaMenor){
+          case (1):
+                switch(colMenor){
+                    case (1): mover = Movimientos.moveNE;
+                    break;
+                    case (2): mover = Movimientos.moveN;
+                    break;
+                    case (3): mover = Movimientos.moveNW;
+                    break;
+                }
+          break;
+          case (2):
+                switch(colMenor){
+                    case (1): mover=Movimientos.moveE;
+                    break;
+                    case (2): System.out.println("\n\nMe quedo quieto");
+                    break;
+                    case (3): mover=Movimientos.moveW;
+                    break;
+                }
+          break;
+          case (3):
+                switch(colMenor){
+                    case (1): mover= Movimientos.moveSE;
+                    break;
+                    case (2): mover=Movimientos.moveS;
+                    break;
+                    case (3): mover=Movimientos.moveSW;
+                    break;
+                }
+          break;
       }  
-      
-      
-      
    }
-  return decision;
+  System.out.println("\n\n\nDecision: "+mover);
+  this.enviarMensajeControlador(json.encodeMove(mover,this.clave_acceso));
+
+  //return mover;
     
 }
  /**
