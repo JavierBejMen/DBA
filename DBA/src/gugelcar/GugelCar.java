@@ -97,7 +97,7 @@ public void execute(){
         this.bateria = json.decodeBattery(battery);
         vect_x.add(this.pos_x);
         vect_y.add(this.pos_y);
-        decidir();
+        decidir_v2();
 
         this.estado_actual = json.decodeEstado(recibirMensajeControlador());
         pasos++;
@@ -351,7 +351,7 @@ public void decidir_v2(){
       int movimiento=0;
       for (int i = 6; i < 9; i++) {
               if(!(lectura_radar.get(i).equals(1))){
-                if ((lectura_escaner.get(i) <= menor) && es_valido(i)) {
+                if ((lectura_escaner.get(i) <= menor) && !he_pasado(i)) {
                     menor = lectura_escaner.get(i);
                     movimiento = i;
               }
@@ -359,7 +359,7 @@ public void decidir_v2(){
       }
       for (int i = 11; i < 14; i++) {
               if(!(lectura_radar.get(i).equals(1))){
-                if ((lectura_escaner.get(i) <= menor && i!=12)&& es_valido(i)){
+                if ((lectura_escaner.get(i) <= menor && i!=12)&& !he_pasado(i)){
                     menor = lectura_escaner.get(i);
                     movimiento = i;
 
@@ -368,13 +368,14 @@ public void decidir_v2(){
       }
       for (int i = 16; i < 19; i++) {
               if(!(lectura_radar.get(i).equals(1))){
-                if ((lectura_escaner.get(i) <= menor) && es_valido(i)) {
+                if ((lectura_escaner.get(i) <= menor) && !he_pasado(i)) {
                     menor = lectura_escaner.get(i);
                     movimiento = i;
 
               }
             }           
       }
+      
     switch(movimiento){
       case (8): mover = Movimientos.moveNE;
       break;
@@ -410,24 +411,24 @@ public void decidir_v2(){
      * 			<li>@donas11 :programación interna </li>
      *         </ul>
      */
-public boolean es_valido(int movimiento){
+public boolean he_pasado(int movimiento){
     boolean valido = false;
     switch(movimiento){
-            case (8):if(vect_x.add(pos_x-1)&&vect_y.add(pos_y+1)) valido = true;
+            case (8):if(vect_x.contains(pos_x-1)&&vect_y.contains(pos_y+1)) valido = true;
             break;
-            case (7): if(vect_x.add(pos_x-1)) valido = true;
+            case (7): if(vect_x.contains(pos_x-1)) valido = true;
             break;
-            case (6): if(vect_x.add(pos_x-1)&&vect_y.add(pos_y-1)) valido = true;
+            case (6): if(vect_x.contains(pos_x-1)&&vect_y.contains(pos_y-1)) valido = true;
             break;
-            case (13): if(vect_y.add(pos_y+1)) valido = true;
+            case (13): if(vect_y.contains(pos_y+1)) valido = true;
             break;
-            case (11): if(vect_y.add(pos_y-1)) valido = true;
+            case (11): if(vect_y.contains(pos_y-1)) valido = true;
             break;
-            case (18): if(vect_x.add(pos_x+1)&&vect_y.add(pos_y+1)) valido = true;
+            case (18): if(vect_x.contains(pos_x+1)&&vect_y.contains(pos_y+1)) valido = true;
             break;
-            case (17): if(vect_x.add(pos_x+1)) valido = true;
+            case (17): if(vect_x.contains(pos_x+1)) valido = true;
             break;
-            case (16): if(vect_x.add(pos_x-1)&&vect_y.add(pos_y+1)) valido = true;
+            case (16): if(vect_x.contains(pos_x-1)&&vect_y.contains(pos_y+1)) valido = true;
             break;
        }
     return valido;
