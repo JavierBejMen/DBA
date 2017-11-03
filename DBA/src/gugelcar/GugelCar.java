@@ -9,7 +9,10 @@ import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.AgentsConnection;
 import es.upv.dsic.gti_ia.core.SingleAgent;
+import static java.lang.reflect.Array.set;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,6 +37,8 @@ private ArrayList<Integer> lectura_radar;
 private Estados estado_actual;
 private final JSON json;
 private int pasos;
+private Set<Integer> vect_x = new HashSet<Integer>();;//Con estos set controlaremos si ya hemos pasado por esa posicion
+private Set<Integer> vect_y = new HashSet<Integer>();;//Para la v2
 
  /**
      * Función auxiliar para saber posición en el Arraylist 
@@ -76,7 +81,7 @@ public GugelCar(AgentID aid) throws Exception{
 @Override
 public void execute(){
     String radar, scanner, gps, battery, traza, mapa;
-    mapa = "map5";
+    mapa = "map1";
     login(mapa);
     
     do {
@@ -90,7 +95,8 @@ public void execute(){
         this.pos_x = json.decodeGPS(gps).x;
         this.pos_y = json.decodeGPS(gps).y;
         this.bateria = json.decodeBattery(battery);
-
+        vect_x.add(this.pos_x);
+        vect_y.add(this.pos_y);
         decidir();
 
         this.estado_actual = json.decodeEstado(recibirMensajeControlador());
@@ -257,11 +263,12 @@ public void actualizarMapa(){
 
 }
  /**
-     * @brief El metodo hace tal
+     * @brief El metodo decide que movimiento realiza, simplemente teniendo en 
+     *  cuenta la menor distancia siempre y cuando no sea una pared
      * @autor <ul>
      * 			<li>jorge: prototipo</li>
-     * 			<li>@donas11 :programación interna </li>
-     * 			<li>Javier :idea inicial</li>
+     * 			<li>@donas11 y Jorge :programación interna </li>
+     * 			<li>Javier y Jorge :idea inicial</li>
      *         </ul>
      */
 public void decidir(){
@@ -325,8 +332,108 @@ public void decidir(){
   this.enviarMensajeControlador(json.encodeMove(mover,this.clave_acceso));
 
 }
+
+/**
+     * @brief El metodo decide que movimiento realiza, teniendo en 
+     *  cuenta la menor distancia siempre y cuando no sea una pared, y si ha pasado o no antes
+     * @autor <ul>
+     * 			<li>jorge: prototipo</li>
+     * 			<li>Jorge :programación interna </li>
+     * 			<li>Javier y Jorge :idea inicial</li>
+     *         </ul>
+     */
+public void decidir_v2(){
+    Movimientos mover = null;
+  if(bateria == 1){
+      mover = Movimientos.refuel;
+  }else{
+      float menor = 9999;
+      int movimiento=0;
+      for (int i = 6; i < 9; i++) {
+              if(!(lectura_radar.get(i).equals(1))){
+                if ((lectura_escaner.get(i) <= menor) && es_valido(i)) {
+                    menor = lectura_escaner.get(i);
+                    movimiento = i;
+              }
+            }           
+      }
+      for (int i = 11; i < 14; i++) {
+              if(!(lectura_radar.get(i).equals(1))){
+                if ((lectura_escaner.get(i) <= menor && i!=12)&& es_valido(i)){
+                    menor = lectura_escaner.get(i);
+                    movimiento = i;
+
+              }
+            }           
+      }
+      for (int i = 16; i < 19; i++) {
+              if(!(lectura_radar.get(i).equals(1))){
+                if ((lectura_escaner.get(i) <= menor) && es_valido(i)) {
+                    menor = lectura_escaner.get(i);
+                    movimiento = i;
+
+              }
+            }           
+      }
+    switch(movimiento){
+      case (8): mover = Movimientos.moveNE;
+      break;
+      case (7): mover = Movimientos.moveN;
+      break;
+      case (6): mover = Movimientos.moveNW;
+      break;
+      case (13): mover=Movimientos.moveE;
+      break;
+      case (12): System.out.println("\n\nMe quedo quieto");
+      break;
+      case (11): mover=Movimientos.moveW;
+      break;
+      case (18): mover= Movimientos.moveSE;
+      break;
+      case (17): mover=Movimientos.moveS;
+      break;
+      case (16): mover=Movimientos.moveSW;
+      break;
+     }
+  }
+    System.out.println("\n\nMe muevo a "+mover);
+
+  this.enviarMensajeControlador(json.encodeMove(mover,this.clave_acceso));
+
+}
+
  /**
      * @brief El metodo hace tal
+     * @param movimiento, Se trata del movimiento que queremos ver si podemos realizar
+     * @autor <ul>
+     * 			<li>jorge: prototipo</li>
+     * 			<li>@donas11 :programación interna </li>
+     *         </ul>
+     */
+public boolean es_valido(int movimiento){
+    boolean valido = false;
+    switch(movimiento){
+            case (8):if(vect_x.add(pos_x-1)&&vect_y.add(pos_y+1)) valido = true;
+            break;
+            case (7): if(vect_x.add(pos_x-1)) valido = true;
+            break;
+            case (6): if(vect_x.add(pos_x-1)&&vect_y.add(pos_y-1)) valido = true;
+            break;
+            case (13): if(vect_y.add(pos_y+1)) valido = true;
+            break;
+            case (11): if(vect_y.add(pos_y-1)) valido = true;
+            break;
+            case (18): if(vect_x.add(pos_x+1)&&vect_y.add(pos_y+1)) valido = true;
+            break;
+            case (17): if(vect_x.add(pos_x+1)) valido = true;
+            break;
+            case (16): if(vect_x.add(pos_x-1)&&vect_y.add(pos_y+1)) valido = true;
+            break;
+       }
+    return valido;
+}
+ /**
+     * @brief El metodo comprueba si estoy en el objetivo
      * @autor <ul>
      * 			<li>jorge: prototipo</li>
      * 			<li>@donas11 :programación interna </li>
