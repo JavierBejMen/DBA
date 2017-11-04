@@ -9,15 +9,10 @@ import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.AgentsConnection;
 import es.upv.dsic.gti_ia.core.SingleAgent;
-import static java.lang.reflect.Array.set;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -25,7 +20,7 @@ import java.util.logging.Logger;
  */
 
 public class GugelCar extends SingleAgent {
-private ArrayList<ArrayList<Integer>> map;
+//private ArrayList<ArrayList<Integer>> map;
 private static final String HOST = "isg2.ugr.es";
 private static final String USER = "Boyero";
 private static final String PASSWORD = "Parra";
@@ -40,9 +35,9 @@ private ArrayList<Integer> lectura_radar;
 private Estados estado_actual;
 private final JSON json;
 private int pasos;
-private Map<Integer,List<Integer>> vector = new HashMap<Integer,List<Integer>>();;//Con estos set controlaremos si ya hemos pasado por esa posicion
-private List<Integer> value = new ArrayList<Integer>();
-
+private static final int TAM_X = 2000;
+private static final int TAM_Y = 2000;
+private int[][] map;
 
  /**
      * Función auxiliar para saber posición en el Arraylist 
@@ -52,7 +47,7 @@ private List<Integer> value = new ArrayList<Integer>();
      * 			<li>@donas11 :prototipo</li>
      * 			<li>@donas11 :programación interna </li>
      *         </ul>
-     */
+     *//*
 private int posMatriz(int fil,int col){
           return ((map.get(0).size())*fil)+col;
     }
@@ -67,10 +62,13 @@ private int posMatriz(int fil,int col){
      */
 public GugelCar(AgentID aid) throws Exception{
     super(aid);
-    map = new ArrayList();
     lectura_escaner = new ArrayList();
     json = new JSON();
     pasos = 0;
+    map = new int[TAM_X][TAM_Y];
+    for (int i = 0; i < TAM_X; i++)
+       for (int j = 0; j < TAM_Y; j++)
+           map[i][j]=0;
 }
 
  /**
@@ -85,7 +83,7 @@ public GugelCar(AgentID aid) throws Exception{
 @Override
 public void execute(){
     String radar, scanner, gps, battery, traza, mapa;
-    mapa = "map3";
+    mapa = "map1";
     login(mapa);
     
     do {
@@ -100,9 +98,7 @@ public void execute(){
         this.pos_y = json.decodeGPS(gps).y;
         this.bateria = json.decodeBattery(battery);
         
-        
-        value.add(this.pos_y);
-        vector.put(this.pos_x, value);
+        map[pos_x][pos_y] = map[pos_x][pos_y]+1;
         
         decidir_v2();
 
@@ -201,53 +197,6 @@ public void logout(){
     enviarMensajeControlador(mensaje);
 }
 
-
- /**
-     * @brief Metodo que en función de la dirección a la que deba moverse se escoge su enum correspondiente
-     * @autor <ul>
-     * 			<li>Jorge : prototipo</li>
-     * 			<li>@donas11 :programación interna </li>
-     *         </ul>
-     */
-/*public void mover(Movimientos move){
-    //Movimientos envio = null;
-    if (Movimientos.refuel.equals(move)){
-        refuel();
-          System.out.println("\n\nEstoy en mover refuel");
-
-    }else {
-      /*  switch(direccion){  
-          case ("NE"):    
-              envio=Movimientos.moveNE;
-          break;
-          case ("N"):
-              envio=Movimientos.moveN;
-          break;
-          case ("NW"):
-              envio=Movimientos.moveNW;
-          break;
-          case ("E"):
-              envio=Movimientos.moveE;
-          break;
-          case ("W"):
-              envio=Movimientos.moveW;
-          break;
-          case ("SE"):
-              envio=Movimientos.moveSE;
-          break;
-          case ("S"):
-              envio=Movimientos.moveS;
-          break;
-          case ("SW"):
-             envio=Movimientos.moveSW;
-          break;
-      }
-          System.out.println("\n\nEstoy en mover en movimientos");
-
-        this.enviarMensajeControlador(json.encodeMove(move,this.clave_acceso));
-    }
-}
-*/
 
  /**
      * @brief El metodo hace tal
@@ -351,6 +300,7 @@ public void decidir(){
      */
 public void decidir_v2(){
     Movimientos mover = null;
+
   if(bateria == 1){
       mover = Movimientos.refuel;
   }else{
@@ -365,11 +315,10 @@ public void decidir_v2(){
             }           
       }
       for (int i = 11; i < 14; i++) {
-              if(!(lectura_radar.get(i).equals(1))){
-                if ((lectura_escaner.get(i) <= menor && i!=12)&& !he_pasado(i)){
+              if(!(lectura_radar.get(i).equals(1)) && (i!=12)){
+                if((lectura_escaner.get(i) <= menor) && !(he_pasado(i))){
                     menor = lectura_escaner.get(i);
                     movimiento = i;
-
               }
             }           
       }
@@ -378,11 +327,10 @@ public void decidir_v2(){
                 if ((lectura_escaner.get(i) <= menor) && !he_pasado(i)) {
                     menor = lectura_escaner.get(i);
                     movimiento = i;
-
               }
             }           
       }
-      
+        
     switch(movimiento){
       case (8): mover = Movimientos.moveNE;
       break;
@@ -410,36 +358,56 @@ public void decidir_v2(){
 
 }
 
+
  /**
-     * @brief El metodo hace tal
+     * @return True si ha pasado, false en caso contrario
+     * @brief El metodo comprueba si ya ha pasado por ese camino
      * @param movimiento, Se trata del movimiento que queremos ver si podemos realizar
      * @autor <ul>
      * 			<li>jorge: prototipo</li>
-     * 			<li>@donas11 :programación interna </li>
+     * 			<li>@jorge :programación interna </li>
      *         </ul>
      */
 public boolean he_pasado(int movimiento){
-    boolean valido = false;
+    boolean pasado = true;
+    
     switch(movimiento){
-
-            case (8): if((vector.containsKey(pos_x-1)) && (vector.containsKey(pos_y+1))) valido = true;
+            case (8): if((pos_x-1 < 0 )&& (pos_y+1 > TAM_Y)){
+                        pasado = true;
+                        }else if(map[pos_x-1][pos_y+1] == 0) pasado = false;
             break;
-            case (7): if(vector.containsKey(pos_x-1)) valido = true;
+            case (7):  if(pos_x-1 < 0 ){
+                        pasado = true;
+                        }else if(map[pos_x-1][pos_y] == 0) pasado = false;
             break;
-            case (6): if(vector.containsKey(pos_x-1)&&vector.containsKey(pos_y-1)) valido = true;
+            case (6):  if(pos_x-1 < 0 && pos_y-1 < 0){
+                        pasado = true;
+                        }else if(map[pos_x-1][pos_y-1] == 0) pasado = false;
             break;
-            case (13): if(vector.containsKey(pos_y+1)) valido = true;
+            case (13):  if(pos_y+1 > TAM_Y){
+                        pasado = true;
+                        }else if(map[pos_x][pos_y+1] == 0) pasado = false;
             break;
-            case (11): if(vector.containsKey(pos_y-1)) valido = true;
+            case (11): if(pos_y-1 < 0){
+                        pasado = true;
+                        }else if(map[pos_x][pos_y-1] == 0)pasado = false;
             break;
-            case (18): if(vector.containsKey(pos_x+1)&& vector.containsKey(pos_y+1)) valido = true;
+            case (18):  if(pos_x+1 > TAM_X && pos_y+1 > TAM_Y){
+                        pasado = true;
+                        }else if(map[pos_x+1][pos_y+1] == 0) pasado = false;
             break;
-            case (17): if(vector.containsKey(pos_x+1)) valido = true;
+            case (17):  if(pos_x+1 > TAM_X){
+                        pasado = true;
+                        }else if(map[pos_x+1][pos_y] == 0) pasado = false;
             break;
-            case (16): if(vector.containsKey(pos_x-1)&& vector.containsKey(pos_y+1)) valido = true;
+            case (16):  if(pos_x+1 > TAM_X && pos_y-1 < 0){
+                        pasado = true;
+                        }else if(map[pos_x+1][pos_y-1] == 0) pasado = false;
+            break;
+            case (12):  pasado = true;
             break;
        }
-    return valido;
+    return pasado;
 }
  /**
      * @brief El metodo comprueba si estoy en el objetivo
