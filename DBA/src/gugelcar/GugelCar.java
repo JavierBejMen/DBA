@@ -28,16 +28,97 @@ private String clave_acceso;
 private static final int PORT = 6000;
 private static final String VIRTUAL_HOST = "Cerastes";
 private int bateria;
-private int pos_x;
-private int pos_y;
+private int pos_x; //posicion en server
+private int pos_y; //posicion en server
 private ArrayList<Float> lectura_escaner;
 private ArrayList<Integer> lectura_radar;
 private Estados estado_actual;
 private final JSON json;
 private int pasos;
-private static final int TAM_X = 2000;
-private static final int TAM_Y = 2000;
+
+/*
+    Gestion del mapa interno (map)
+    si en server estamos en la posicion (20,20)
+    en map estaremos en la posicion (20+MARGIN_X, 20+MARGIN_Y)
+    se han definido funciones privadas para el manejo de las coordenadas
+
+*/
+private static final int TAM_X = 2000; //mapa x
+private static final int TAM_Y = 2000; //mapa y
+private static final int MARGIN_X = 100; //margen del map x
+private static final int MARGIN_Y = 100; //margen del map y
 private int[][] map;
+private int mpos_x; //posicion en map
+private int mpos_y; //posicion en map
+
+/**
+ * @author Javier Bejar Mendez
+ * @brief transforma la posicion xy del radar a la posicion en map
+ * @param xy posicion en el vector del radar
+ * @return int[] pos de 2 posiciones, pos[0] contiene la posicion x en map y pos[1] la posicion y en map
+ */
+private int[] radar_to_map_pos(int xy){
+    
+    int[] pos = new int[2];
+    pos[0] = this.mpos_x - 2 + xy/5;
+    pos[1] = this.mpos_y - 2 + xy%5;
+    
+    return pos;
+}
+
+/**
+ * @author Javier Bejar Mendez
+ * @brief transforma la posicion xy del radar a la posicion en server
+ * @param xy posicion en el vector del radar
+ * @return int[] pos de 2 posiciones, pos[0] contiene la posicion x en server y pos[1] la posicion y en server
+ */
+private int[] radar_to_server_pos(int xy){
+    int[] pos = new int[2];
+    pos[0] = this.pos_x - 2 + xy/5;
+    pos[1] = this.pos_y - 2 + xy%5;
+    
+    return pos;
+}
+
+/**
+ * @author Javier Bejar Mendez
+ * @brief transforma la posicion (x,y) del server a la posicion en map
+ * @param x posicion x en server
+ * @param y posicion y en server
+ * @return int[] pos de 2 posiciones, pos[0] contiene la posicion x en map y pos[1] la posicion y en map
+ */
+private int[] server_to_map_pos(int x, int y){
+    int[] pos = new int[2];
+    pos[0] = x - MARGIN_X;
+    pos[1] = y - MARGIN_Y;
+    
+    return pos;
+}
+
+/**
+ * @author Javier Bejar Mendez
+ * @brief transforma la posicion (x,y) del map a la posicion en server
+ * @param x posicion x en map
+ * @param y posicion y en map
+ * @return int[] pos de 2 posiciones, pos[0] contiene la posicion x en server y pos[1] la posicion y en server
+ */
+private int[] map_to_server_pos(int x, int y){
+    int[] pos = new int[2];
+    pos[0] = x + MARGIN_X;
+    pos[1] = y + MARGIN_Y;
+    
+    return pos;
+}
+
+/**
+ * @author Javier Bejar Mendez
+ * @brief actualiza la posicion actual del map en funcion de la posicion actual del server
+ */
+private void actualiza_mpos(){
+    this.mpos_x = this.pos_x + MARGIN_X;
+    this.mpos_y = this.pos_y + MARGIN_Y;
+}
+
 
  /**
      * Función auxiliar para saber posición en el Arraylist 
@@ -217,7 +298,10 @@ public void refuel(){
      */
 public void actualizarMapa(){ //Recorremos toda la matriz incrementando cada posición del mapa que no sea obstaculo
     //Actualización
-    
+    int size = this.lectura_radar.size();
+    for(int i = 0; i < size; ++i){
+       
+    }
     
     //Incremento
     for(int i = 0; i < TAM_X; ++i){
@@ -227,6 +311,7 @@ public void actualizarMapa(){ //Recorremos toda la matriz incrementando cada pos
         }
     }
 }
+
 /**
      * @brief selecciona como movimiento la casilla de alrededor que mas tiempo lleve sin visitar
      * @autor <ul>
