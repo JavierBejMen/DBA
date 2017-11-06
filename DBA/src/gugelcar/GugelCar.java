@@ -32,7 +32,7 @@ private ArrayList<Integer> lectura_radar;
 private Estados estado_actual;
 private final JSON json;
 private int pasos;
-
+boolean obj = false;
 /*
     Gestion del mapa interno (map)
     si en server estamos en la posicion (20,20)
@@ -237,7 +237,7 @@ public GugelCar(AgentID aid) throws Exception{
 @Override
 public void execute(){
     String radar, scanner, gps, battery, traza, mapa;
-    mapa = "map10";
+    mapa = "map9";
     login(mapa);
     
     do {
@@ -377,15 +377,15 @@ public void refuel(){
      */
 public void actualizarMapa(){ //Recorremos toda la matriz incrementando cada posición del mapa que no sea obstaculo
     //Actualización de obstaculos y objetivo
-    int size = this.lectura_radar.size();
+    int size = 9;//this.lectura_radar.size();
     int[] auxpos;
     for(int i = 0; i < size; ++i){ //recorremos todo el vector donde esta el radar
         auxpos = this.vector_to_map_pos(i, size);
        if(map[auxpos[0]][auxpos[1]] != -1){ //Si nuestro mapa no es obstaculo (!=-1)
-           if(this.lectura_radar.get(i) == 1){ //Si el radar  es obstaculo (=1)
+           if(this.lectura_radar.get(i+(2*(3 +(i/3)))) == 1){ //Si el radar  es obstaculo (=1)
                 map[auxpos[0]][auxpos[1]] = -1; //añadimos el obstaculo a nuestro mapa
            }
-           else if(this.lectura_radar.get(i) == 2){//Si el radar es el objetivo
+           else if(this.lectura_radar.get(i+(2*(3 +(i/3)))) == 2){//Si el radar es el objetivo
                map[auxpos[0]][auxpos[1]] = -2; //añadimos el objetivo a nuestro mapa
            }
        }
@@ -463,7 +463,12 @@ public void decidir_v3(){
         move_to = this.greedy_v3();
         if(move_to == null){
             System.out.println("Ya visitado==========================================================");
-            mover = this.menos_reciente();
+            if(this.no_solucion()){
+                System.out.println("El mapa no tiene solución\nSaliendo");
+                obj = true;
+            }else{
+                mover = this.menos_reciente();
+            }
         }
         else{
             mover = this.pos_to_move(move_to);
@@ -475,11 +480,17 @@ public void decidir_v3(){
 /**
      * @brief comprobar que no se pueden visitar casillas nuevas
      * @author Javier Bejar Mendez
-     * @return 
+     * @return true si el mapa no tiene solucion, false si no se sabe
      */ 
-/*private boolean no_solucion(int[] v_car){
-    
-}*/
+private boolean no_solucion(){//No funciona
+    boolean no_sol = true;
+    for(int i = 0; i < TAM_X; ++i){
+        for(int j = 0; j < TAM_Y;++j){
+            if(map[i][j] > pasos) no_sol = false;
+        }
+    }
+    return no_sol;
+}
 /**
      * @brief greedy para v3
      * @author Javier Bejar Mendez
@@ -502,7 +513,7 @@ private int[] greedy_v3(){
             no_goal = false;
             move_to = auxpos;
         }
-        else if(posmapvalue > 0 && (posmapvalue-1) >= pasos){ //Es decir no es un obstaculo y no la ha visitado
+        else if(posmapvalue > 0 && posmapvalue > pasos){ //Es decir no es un obstaculo y no la ha visitado
             if(mas_cercano > this.lectura_escaner.get(i+(2*(3 +(i/3))))){ //Esta casilla es mas prometedora
                 mas_cercano = this.lectura_escaner.get(i+(2*(3 +(i/3)))); //Actualizamos el valor
                 move_to = auxpos; //Seleccionamos esta casilla como objetivo
@@ -711,7 +722,7 @@ public boolean he_pasado(int movimiento){
      *         </ul>
      */
 public boolean estoyEnObjetivo(){
-    boolean obj=false;
+   
     if(lectura_radar.get(12) == 2){
         obj=true;
         System.out.println("Estoy en objetivo. Pasos dados: "+pasos);
