@@ -176,6 +176,7 @@ private Movimientos pos_to_move(int[] pos){
             break;
         case "ne":
             move=Movimientos.moveNE;
+            break;
         case "so"  :
             move=Movimientos.moveSW;
             break;
@@ -187,7 +188,7 @@ private Movimientos pos_to_move(int[] pos){
             break;
     }
     
-   
+   System.out.println(move.toString());
     return move;
 }
 
@@ -236,7 +237,7 @@ public GugelCar(AgentID aid) throws Exception{
 @Override
 public void execute(){
     String radar, scanner, gps, battery, traza, mapa;
-    mapa = "map1";
+    mapa = "map10";
     login(mapa);
     
     do {
@@ -244,7 +245,7 @@ public void execute(){
         scanner = recibirMensajeControlador();
         gps = recibirMensajeControlador();
         battery = recibirMensajeControlador();
-    
+        
         this.lectura_escaner = json.decodeScanner(scanner);
         this.lectura_radar = json.decodeRadar(radar);
         this.pos_x = json.decodeGPS(gps).x;
@@ -260,7 +261,8 @@ public void execute(){
         decidir_v3();
         
         this.estado_actual = json.decodeEstado(recibirMensajeControlador());
-        //pasos++; usado en v2
+        pasos++;
+        
         
     } while (!estoyEnObjetivo());
 
@@ -452,16 +454,64 @@ public void decidir_v3(){
     
     this.actualizarMapa();
     Movimientos mover = null;
+    int[] move_to = null;
     if(bateria == 1){
         mover = Movimientos.refuel;
         System.out.println("refuel-------------");
     }
     else{
-        
-        mover = this.menos_reciente();
+        move_to = this.greedy_v3();
+        if(move_to == null){
+            System.out.println("Ya visitado==========================================================");
+            mover = this.menos_reciente();
+        }
+        else{
+            mover = this.pos_to_move(move_to);
+        }
         
     }
     this.enviarMensajeControlador(json.encodeMove(mover,this.clave_acceso));
+}
+/**
+     * @brief comprobar que no se pueden visitar casillas nuevas
+     * @author Javier Bejar Mendez
+     * @return 
+     */ 
+/*private boolean no_solucion(int[] v_car){
+    
+}*/
+/**
+     * @brief greedy para v3
+     * @author Javier Bejar Mendez
+     * @return 
+     */ 
+private int[] greedy_v3(){
+    float mas_cercano = 999999;
+    int[] auxpos;
+    int size = 9;
+    int posmapvalue;
+    int[] move_to = null;
+    boolean no_goal = true;
+    
+    for(int i = 0; i < size && no_goal; ++i){
+        auxpos = this.vector_to_map_pos(i, size);
+        posmapvalue = map[auxpos[0]][auxpos[1]];
+        
+        if(posmapvalue == -2){
+            //Tenemos el objetivo
+            no_goal = false;
+            move_to = auxpos;
+        }
+        else if(posmapvalue > 0 && (posmapvalue-1) >= pasos){ //Es decir no es un obstaculo y no la ha visitado
+            if(mas_cercano > this.lectura_escaner.get(i+(2*(3 +(i/3))))){ //Esta casilla es mas prometedora
+                mas_cercano = this.lectura_escaner.get(i+(2*(3 +(i/3)))); //Actualizamos el valor
+                move_to = auxpos; //Seleccionamos esta casilla como objetivo
+            }
+        }
+    }
+   
+    
+    return move_to;
 }
  /**
      * @brief El metodo decide que movimiento realiza, simplemente teniendo en 
