@@ -83,7 +83,7 @@ public GugelCar(AgentID aid) throws Exception{
 @Override
 public void execute(){
     String radar, scanner, gps, battery, traza, mapa;
-    mapa = "map1";
+    mapa = "map10";
     login(mapa);
     
     do {
@@ -99,7 +99,6 @@ public void execute(){
         this.bateria = json.decodeBattery(battery);
         
         map[pos_x][pos_y] = map[pos_x][pos_y]+1;
-        
         decidir_v2();
 
         this.estado_actual = json.decodeEstado(recibirMensajeControlador());
@@ -300,7 +299,6 @@ public void decidir(){
      */
 public void decidir_v2(){
     Movimientos mover = null;
-
   if(bateria == 1){
       mover = Movimientos.refuel;
   }else{
@@ -316,11 +314,11 @@ public void decidir_v2(){
       }
       for (int i = 11; i < 14; i++) {
               if(!(lectura_radar.get(i).equals(1)) && (i!=12)){
-                if((lectura_escaner.get(i) <= menor) && !(he_pasado(i))){
+                if((lectura_escaner.get(i) <= menor) && !he_pasado(i)){
                     menor = lectura_escaner.get(i);
                     movimiento = i;
               }
-            }           
+            }
       }
       for (int i = 16; i < 19; i++) {
               if(!(lectura_radar.get(i).equals(1))){
@@ -358,7 +356,6 @@ public void decidir_v2(){
 
 }
 
-
  /**
      * @return True si ha pasado, false en caso contrario
      * @brief El metodo comprueba si ya ha pasado por ese camino
@@ -372,37 +369,38 @@ public boolean he_pasado(int movimiento){
     boolean pasado = true;
     
     switch(movimiento){
-            case (8): if((pos_x-1 < 0 )&& (pos_y+1 > TAM_Y)){
+            case (8): if((pos_x+1 > TAM_X )|| (pos_y-1 < 0)){
                         pasado = true;
-                        }else if(map[pos_x-1][pos_y+1] == 0) pasado = false;
+                        }else if(map[pos_x+1][pos_y-1] == 0) pasado = false;
             break;
-            case (7):  if(pos_x-1 < 0 ){
+            case (7):  if(pos_y-1 < 0 ){
                         pasado = true;
-                        }else if(map[pos_x-1][pos_y] == 0) pasado = false;
+                        }else if(this.map[pos_x][pos_y-1] == 0) pasado = false;
             break;
-            case (6):  if(pos_x-1 < 0 && pos_y-1 < 0){
+            case (6):  if(pos_x-1 < 0 || pos_y-1 < 0){
                         pasado = true;
                         }else if(map[pos_x-1][pos_y-1] == 0) pasado = false;
             break;
-            case (13):  if(pos_y+1 > TAM_Y){
-                        pasado = true;
-                        }else if(map[pos_x][pos_y+1] == 0) pasado = false;
-            break;
-            case (11): if(pos_y-1 < 0){
-                        pasado = true;
-                        }else if(map[pos_x][pos_y-1] == 0)pasado = false;
-            break;
-            case (18):  if(pos_x+1 > TAM_X && pos_y+1 > TAM_Y){
-                        pasado = true;
-                        }else if(map[pos_x+1][pos_y+1] == 0) pasado = false;
-            break;
-            case (17):  if(pos_x+1 > TAM_X){
+            case (13):  if(pos_x+1 > TAM_X){
                         pasado = true;
                         }else if(map[pos_x+1][pos_y] == 0) pasado = false;
             break;
-            case (16):  if(pos_x+1 > TAM_X && pos_y-1 < 0){
+            case (11): if(pos_x-1 < 0){
                         pasado = true;
-                        }else if(map[pos_x+1][pos_y-1] == 0) pasado = false;
+                        }else if(map[pos_x-1][pos_y] == 0)pasado = false;
+            break;
+            case (18):  if((pos_x+1 > TAM_X) || (pos_y+1 > TAM_Y)){
+                        pasado = true;
+                        }else if(map[pos_x+1][pos_y+1] == 0) pasado = false;
+            break;
+            case (17):  if(pos_y+1 > TAM_Y){
+                        pasado = true;
+                        }else if(map[pos_x][pos_y+1] == 0) pasado = false;
+            break;
+            case (16):  
+                if((pos_x-1 < 0) || (pos_y+1 > TAM_Y)){
+                        pasado = true;
+                        }else if(map[pos_x-1][pos_y+1] == 0) pasado = false;
             break;
             case (12):  pasado = true;
             break;
