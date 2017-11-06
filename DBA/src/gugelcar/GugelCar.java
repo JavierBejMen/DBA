@@ -209,14 +209,48 @@ public void refuel(){
     this.enviarMensajeControlador(json.encodeRefuel(clave_acceso));
 }
  /**
-     * @brief El metodo hace tal
+     * @brief Actualiza el mapa con las lecturas del radar e incrementa las posiciones no visitadas
      * @autor <ul>
      * 			<li>jorge : prototipo</li>
      * 			<li> :programación interna </li>
+     *                  <li>Javier bejar: codigo</li>
      *         </ul>
      */
-public void actualizarMapa(){
-
+public void actualizarMapa(){ //Recorremos toda la matriz incrementando cada posición del mapa que no sea obstaculo
+    //Actualización
+    
+    
+    //Incremento
+    for(int i = 0; i < TAM_X; ++i){
+        for(int j = 0; j < TAM_Y; ++j){
+            if(map[i][j]!=-1)
+                ++map[i][j];
+        }
+    }
+}
+/**
+     * @brief selecciona como movimiento la casilla de alrededor que mas tiempo lleve sin visitar
+     * @autor <ul>
+     *
+     *                  <li>Javier bejar: esqueleto</li>
+     *         </ul>
+     */
+public Movimientos menos_reciente(){
+    Movimientos movimiento = null;
+    
+    
+    return movimiento;
+}
+/**
+     * @brief decide en función de decidir_v2() y llama al metodo menos_reciente en caso de bucle
+     * @autor <ul>
+     *
+     *                  <li>Javier bejar: esqueleto</li>
+     *         </ul>
+     */
+public void decidir_v3(){
+    
+    
 }
  /**
      * @brief El metodo decide que movimiento realiza, simplemente teniendo en 
