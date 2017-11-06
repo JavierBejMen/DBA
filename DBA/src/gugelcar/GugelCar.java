@@ -10,9 +10,6 @@ import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.AgentsConnection;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  *
@@ -37,7 +34,7 @@ private final JSON json;
 private int pasos;
 private static final int TAM_X = 2000;
 private static final int TAM_Y = 2000;
-private int[][] map;
+private int[][] map; //Mapa
 
  /**
      * Función auxiliar para saber posición en el Arraylist 
@@ -65,7 +62,7 @@ public GugelCar(AgentID aid) throws Exception{
     lectura_escaner = new ArrayList();
     json = new JSON();
     pasos = 0;
-    map = new int[TAM_X][TAM_Y];
+    map = new int[TAM_X][TAM_Y]; //Inicializo el mapa a 0, indicando las veces que se ha pasado por la posicion i j
     for (int i = 0; i < TAM_X; i++)
        for (int j = 0; j < TAM_Y; j++)
            map[i][j]=0;
@@ -98,7 +95,7 @@ public void execute(){
         this.pos_y = json.decodeGPS(gps).y;
         this.bateria = json.decodeBattery(battery);
         
-        map[pos_x][pos_y] = map[pos_x][pos_y]+1;
+        map[pos_x][pos_y] = map[pos_x][pos_y]+1; //Incremento en 1 indicando que se ha pasado una vez más por esa posición
         decidir_v2();
 
         this.estado_actual = json.decodeEstado(recibirMensajeControlador());
@@ -339,31 +336,31 @@ public void decidir_v2(){
       float menor = 9999;
       int movimiento=0;
       for (int i = 6; i < 9; i++) {
-              if(!(lectura_radar.get(i).equals(1))){
-                if ((lectura_escaner.get(i) <= menor) && !he_pasado(i)) {
-                    menor = lectura_escaner.get(i);
-                    movimiento = i;
+              if(!(lectura_radar.get(i).equals(1))){ //Si no hay una pared..
+                if ((lectura_escaner.get(i) <= menor) && !he_pasado(i)) { //Si la posición tiene un valor menor de scanner y no he pasado
+                    menor = lectura_escaner.get(i); //Guardo la menor distancia hasta el momento
+                    movimiento = i; //Guardo el mejor movimiento hasta el momento
               }
             }           
       }
       for (int i = 11; i < 14; i++) {
-              if(!(lectura_radar.get(i).equals(1)) && (i!=12)){
-                if((lectura_escaner.get(i) <= menor) && !he_pasado(i)){
-                    menor = lectura_escaner.get(i);
-                    movimiento = i;
+              if(!(lectura_radar.get(i).equals(1)) && (i!=12)){//Si no hay una pared y no me quedo quieto
+                if((lectura_escaner.get(i) <= menor) && !he_pasado(i)){//Si la posición tiene un valor menor de scanner y no he pasado
+                    menor = lectura_escaner.get(i);//Guardo la menor distancia hasta el momento
+                    movimiento = i;//Guardo el mejor movimiento hasta el momento
               }
             }
       }
       for (int i = 16; i < 19; i++) {
-              if(!(lectura_radar.get(i).equals(1))){
-                if ((lectura_escaner.get(i) <= menor) && !he_pasado(i)) {
-                    menor = lectura_escaner.get(i);
-                    movimiento = i;
+              if(!(lectura_radar.get(i).equals(1))){//Si no hay una pared..
+                if ((lectura_escaner.get(i) <= menor) && !he_pasado(i)) {//Si la posición tiene un valor menor de scanner y no he pasado
+                    menor = lectura_escaner.get(i);//Guardo la menor distancia hasta el momento
+                    movimiento = i;//Guardo el mejor movimiento hasta el momento
               }
             }           
       }
         
-    switch(movimiento){
+    switch(movimiento){ //Transformo el int al movimiento equivalente
       case (8): mover = Movimientos.moveNE;
       break;
       case (7): mover = Movimientos.moveN;
@@ -402,10 +399,10 @@ public void decidir_v2(){
 public boolean he_pasado(int movimiento){
     boolean pasado = true;
     
-    switch(movimiento){
-            case (8): if((pos_x+1 > TAM_X )|| (pos_y-1 < 0)){
+    switch(movimiento){ //Dependiendo del movimiento que corresponda
+            case (8): if((pos_x+1 > TAM_X )|| (pos_y-1 < 0)){ //Compruebo si existe esa posición del mapa
                         pasado = true;
-                        }else if(map[pos_x+1][pos_y-1] == 0) pasado = false;
+                        }else if(map[pos_x+1][pos_y-1] == 0) pasado = false; //Si no he pasado..
             break;
             case (7):  if(pos_y-1 < 0 ){
                         pasado = true;
@@ -439,7 +436,7 @@ public boolean he_pasado(int movimiento){
             case (12):  pasado = true;
             break;
        }
-    return pasado;
+    return pasado; //Devuelvo un boolean indicando si he pasado o no (true/false)
 }
  /**
      * @brief El metodo comprueba si estoy en el objetivo
