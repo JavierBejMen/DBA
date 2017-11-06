@@ -52,19 +52,20 @@ private int mpos_y; //posicion en map
  * @author Javier Bejar Mendez
  * @brief transforma la posicion xy del vector a la posicion en map, se puede 
  * usar para obtener la poscion xy del radar o scaner, ejemplo: 
- *  int size = 5 //el radar es un vector de tamaño 25, es una matriz 5x5 luego tam = 5
+ *  int size = this.lectura_radar.size(); //el radar es un vector de tamaño 25, es una matriz 5x5
  *  int[] auxpos;
  *  auxpos = this.vector_to_map_pos(xy, size);
  *  auxpos[0] equivale a la posicion x en el mapa de la posicion xy del radar
  * @param xy posicion en el vector
- * @param tam tamaño de la columan o fila, se supone que trabajamos en matriz cuadrada
+ * @param size tamaño del vector que representa una matriz cuadrada;
  * @return int[] pos de 2 posiciones, pos[0] contiene la posicion x en map y pos[1] la posicion y en map
  */
-private int[] vector_to_map_pos(int xy, int tam){
-    
+private int[] vector_to_map_pos(int xy, int size){
+    int tam = size/size;
+    int mid = tam/2;
     int[] pos = new int[2];
-    pos[0] = this.mpos_x - 2 + xy/tam;
-    pos[1] = this.mpos_y - 2 + xy%tam;
+    pos[0] = this.mpos_x - mid + xy/tam;
+    pos[1] = this.mpos_y - mid + xy%tam;
     
     return pos;
 }
@@ -73,13 +74,15 @@ private int[] vector_to_map_pos(int xy, int tam){
  * @author Javier Bejar Mendez
  * @brief transforma la posicion xy del vector a la posicion en server
  * @param xy posicion en el vector
- * @param tam tamaño de la columan o fila, se supone que trabajamos en matriz cuadrada
+ * @param size tamaño del vector que representa una matriz cuadrada;
  * @return int[] pos de 2 posiciones, pos[0] contiene la posicion x en server y pos[1] la posicion y en server
  */
-private int[] vector_to_server_pos(int xy, int tam){
+private int[] vector_to_server_pos(int xy, int size){
     int[] pos = new int[2];
-    pos[0] = this.pos_x - 2 + xy/tam;
-    pos[1] = this.pos_y - 2 + xy%tam;
+    int tam = size/size;
+    int mid = tam/2;
+    pos[0] = this.pos_x - mid + xy/tam;
+    pos[1] = this.pos_y - mid + xy%tam;
     
     return pos;
 }
@@ -305,7 +308,7 @@ public void actualizarMapa(){ //Recorremos toda la matriz incrementando cada pos
     int size = this.lectura_radar.size();
     int[] auxpos;
     for(int i = 0; i < size; ++i){ //recorremos todo el vector donde esta el radar
-        auxpos = this.vector_to_map_pos(i, 5);
+        auxpos = this.vector_to_map_pos(i, size);
        if(map[auxpos[0]][auxpos[1]] != -1){ //Si nuestro mapa no es obstaculo (!=-1)
            if(this.lectura_radar.get(i) == 1){ //Si el radar  es obstaculo (=1)
                 map[auxpos[0]][auxpos[1]] = -1; //añadimos el obstaculo a nuestro mapa
@@ -336,10 +339,9 @@ public void actualizarMapa(){ //Recorremos toda la matriz incrementando cada pos
 public Movimientos menos_reciente(){
     Movimientos movimiento = null;
     int mas_viejo = 0;
-    for(int i = 0; i < 2; ++i){
-        for(int j = 0; i < 2;++j){
-            
-        }
+    int[] aux_pos;
+    for(int i = 0; i < 9; ++i){
+        aux_pos = this.vector_to_map_pos(i, 9);
     }
     
     return movimiento;
