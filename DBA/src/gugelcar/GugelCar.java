@@ -126,6 +126,69 @@ private void actualiza_mpos(){
     this.mpos_y = this.pos_y + MARGIN_Y;
 }
 
+/**
+ * @author Javier Bejar Mendez
+ * @brief de vuelve el movimiento que hay que realizar para ir a pos desde la posicion actual en map
+ *          ¡¡¡No en server ojo!!!
+ * @param pos posicion en formato pos[2] a la que queremos desplazarnos
+ * @return move, movimiento ha realizar para ir a pos
+ */
+private Movimientos pos_to_move(int[] pos){
+    Movimientos move = null;
+    String cardinal = "";
+    int fpos = pos[0]/TAM_X;
+    int cpos = pos[0]%TAM_Y;
+    int fmpos = this.mpos_x/TAM_X;
+    int cmpos = this.mpos_y%TAM_Y;
+    
+    //comprobamos que a donde queremos ir esta al norte o al sur
+    if(fpos < fmpos){
+        cardinal += "n";
+    }else if(fpos > fmpos){
+        cardinal += "s";
+    }
+    
+    //comprobamos que a donde queremos ir esta al oeste o al este
+    if(cpos < cmpos){
+        cardinal += "o";
+    }else if(cpos > cmpos){
+        cardinal += "e";
+    }
+    
+    switch(cardinal){
+        case "n":
+            move=Movimientos.moveN;
+            break;
+        case "s"  :
+            move=Movimientos.moveS;
+            break;
+        case "o":
+            move=Movimientos.moveW;
+            break;
+        case "e":
+            move=Movimientos.moveE;
+            break;
+        case "no":
+            move=Movimientos.moveNW;
+            break;
+        case "ne":
+            move=Movimientos.moveNE;
+        case "so"  :
+            move=Movimientos.moveSW;
+            break;
+        case "se"  :
+            move=Movimientos.moveSE;
+            break;
+        default:
+            System.out.println("Se ha recibido la misma posicion en pos_to_move()");
+            break;
+    }
+    
+   
+    
+    return move;
+}
+
 
  /**
      * Función auxiliar para saber posición en el Arraylist 
@@ -186,11 +249,16 @@ public void execute(){
         this.pos_y = json.decodeGPS(gps).y;
         this.bateria = json.decodeBattery(battery);
         
-        map[pos_x][pos_y] = map[pos_x][pos_y]+1; //Incremento en 1 indicando que se ha pasado una vez más por esa posición
+        //Version usada en v2
+        /*map[pos_x][pos_y] = map[pos_x][pos_y]+1; //Incremento en 1 indicando que se ha pasado una vez más por esa posición
         decidir_v2();
-
+        */ 
+        
+        //Version v3
+        decidir_v3();
+        
         this.estado_actual = json.decodeEstado(recibirMensajeControlador());
-        pasos++;
+        //pasos++; usado en v2
         
     } while (!estoyEnObjetivo());
 
@@ -318,7 +386,8 @@ public void actualizarMapa(){ //Recorremos toda la matriz incrementando cada pos
            }
        }
     }
-    
+    //Ponemos la casilla donde estamos a 0, acabamos de visitarla
+    map[this.mpos_x][this.mpos_y] = 0;
     //Incrementamos todas las casillas que no sean ni obstaculo ni objetivo
     for(int i = 0; i < TAM_X; ++i){
         for(int j = 0; j < TAM_Y; ++j){
@@ -336,15 +405,32 @@ public void actualizarMapa(){ //Recorremos toda la matriz incrementando cada pos
      *         </ul>
      * @return movimiento, el movimiento seleccionado
      */
-public Movimientos menos_reciente(){
-    Movimientos movimiento = null;
+private Movimientos menos_reciente(){
+    
     int mas_viejo = 0;
-    int[] aux_pos;
-    for(int i = 0; i < 9; ++i){
-        aux_pos = this.vector_to_map_pos(i, 9);
+    int[] auxpos;
+    int size = 9;
+    int posmapvalue;
+    int[] move_to = null;
+    boolean no_goal = true;
+    
+    for(int i = 0; i < size && no_goal; ++i){
+        auxpos = this.vector_to_map_pos(i, size);
+        posmapvalue = map[auxpos[0]][auxpos[1]];
+        if(posmapvalue == -2){
+            //Tenemos el objetivo
+            no_goal = false;
+            move_to = auxpos;
+        }
+        else if(posmapvalue > 0){ //Es decir no es un obstaculo
+            if(mas_viejo > posmapvalue){ //Esta casilla lleva mas tiempo sin visitarse
+                mas_viejo = posmapvalue; //Actualizamos el valor
+                move_to = auxpos; //Seleccionamos esta casilla como objetivo
+            }
+        }
     }
     
-    return movimiento;
+    return this.pos_to_move(move_to);
 }
 /**
      * @brief decide en función de decidir_v2() y llama al metodo menos_reciente en caso de bucle
@@ -354,8 +440,16 @@ public Movimientos menos_reciente(){
      *         </ul>
      */
 public void decidir_v3(){
-    
-    
+    this.actualiza_mpos();
+    this.actualizarMapa();
+    Movimientos mover = null;
+    if(bateria == 1){
+        mover = Movimientos.refuel;
+    }
+    else{
+        mover = this.menos_reciente();
+    }
+    this.enviarMensajeControlador(json.encodeMove(mover,this.clave_acceso));
 }
  /**
      * @brief El metodo decide que movimiento realiza, simplemente teniendo en 
