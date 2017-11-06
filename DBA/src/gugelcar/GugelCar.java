@@ -290,20 +290,29 @@ public void refuel(){
      * @autor <ul>
      * 			<li>jorge : prototipo</li>
      * 			<li> :programación interna </li>
-     *                  <li>Javier bejar: codigo</li>
+     *                  <li>Javier bejar : implementacion</li>
      *         </ul>
      */
 public void actualizarMapa(){ //Recorremos toda la matriz incrementando cada posición del mapa que no sea obstaculo
-    //Actualización
+    //Actualización de obstaculos y objetivo
     int size = this.lectura_radar.size();
-    for(int i = 0; i < size; ++i){
-       
+    int[] auxpos;
+    for(int i = 0; i < size; ++i){ //recorremos todo el vector donde esta el radar
+        auxpos = this.radar_to_map_pos(i);
+       if(map[auxpos[0]][auxpos[1]] != -1){ //Si nuestro mapa no es obstaculo (!=-1)
+           if(this.lectura_radar.get(i) == 1){ //Si el radar  es obstaculo (=1)
+                map[auxpos[0]][auxpos[1]] = -1; //añadimos el obstaculo a nuestro mapa
+           }
+           else if(this.lectura_radar.get(i) == 2){//Si el radar es el objetivo
+               map[auxpos[0]][auxpos[1]] = -2; //añadimos el objetivo a nuestro mapa
+           }
+       }
     }
     
-    //Incremento
+    //Incrementamos todas las casillas que no sean ni obstaculo ni objetivo
     for(int i = 0; i < TAM_X; ++i){
         for(int j = 0; j < TAM_Y; ++j){
-            if(map[i][j]!=-1)
+            if(map[i][j] >= 0)
                 ++map[i][j];
         }
     }
@@ -315,10 +324,11 @@ public void actualizarMapa(){ //Recorremos toda la matriz incrementando cada pos
      *
      *                  <li>Javier bejar: esqueleto</li>
      *         </ul>
+     * @return movimiento, el movimiento seleccionado
      */
 public Movimientos menos_reciente(){
     Movimientos movimiento = null;
-    
+        
     
     return movimiento;
 }
