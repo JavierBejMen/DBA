@@ -61,11 +61,11 @@ private int mpos_y; //posicion en map
  * @return int[] pos de 2 posiciones, pos[0] contiene la posicion x en map y pos[1] la posicion y en map
  */
 private int[] vector_to_map_pos(int xy, int size){
-    int tam = size/size;
+    int tam = (int)Math.sqrt(size);
     int mid = tam/2;
     int[] pos = new int[2];
-    pos[0] = this.mpos_x - mid + xy/tam;
-    pos[1] = this.mpos_y - mid + xy%tam;
+    pos[0] = this.mpos_x - mid + xy%tam;
+    pos[1] = this.mpos_y - mid + xy/tam;
     
     return pos;
 }
@@ -79,10 +79,10 @@ private int[] vector_to_map_pos(int xy, int size){
  */
 private int[] vector_to_server_pos(int xy, int size){
     int[] pos = new int[2];
-    int tam = size/size;
+    int tam = (int)Math.sqrt(size);
     int mid = tam/2;
-    pos[0] = this.pos_x - mid + xy/tam;
-    pos[1] = this.pos_y - mid + xy%tam;
+    pos[0] = this.pos_x - mid + xy%tam;
+    pos[1] = this.pos_y - mid + xy/tam;
     
     return pos;
 }
@@ -134,27 +134,30 @@ private void actualiza_mpos(){
  * @return move, movimiento ha realizar para ir a pos
  */
 private Movimientos pos_to_move(int[] pos){
+    if(pos == null) System.out.println("Error posicion vacia en pos_to_move parametro");
     Movimientos move = null;
-    String cardinal = "";
-    int fpos = pos[0]/TAM_X;
-    int cpos = pos[0]%TAM_Y;
-    int fmpos = this.mpos_x/TAM_X;
-    int cmpos = this.mpos_y%TAM_Y;
     
+    String cardinal = new String("");
+    
+    
+    System.out.println("current_pos:["+this.mpos_x+","+this.mpos_y+"]\npos_to_move:["+pos[0]+","+pos[1]+"]");
+    //System.out.println("fpos:"+fpos+",cpos:"+cpos+",fmpos:"+fmpos+",cmpos:"+cmpos);
     //comprobamos que a donde queremos ir esta al norte o al sur
-    if(fpos < fmpos){
+    //comprobamos que a donde queremos ir esta al oeste o al este
+    if(pos[1] < this.mpos_y){
         cardinal += "n";
-    }else if(fpos > fmpos){
+    }else if(pos[1] > this.mpos_y){
         cardinal += "s";
     }
     
-    //comprobamos que a donde queremos ir esta al oeste o al este
-    if(cpos < cmpos){
+    if(pos[0] < this.mpos_x){
         cardinal += "o";
-    }else if(cpos > cmpos){
+    }else if(pos[0] > this.mpos_x){
         cardinal += "e";
     }
     
+    
+    System.out.println(cardinal);
     switch(cardinal){
         case "n":
             move=Movimientos.moveN;
@@ -185,7 +188,6 @@ private Movimientos pos_to_move(int[] pos){
     }
     
    
-    
     return move;
 }
 
@@ -234,7 +236,7 @@ public GugelCar(AgentID aid) throws Exception{
 @Override
 public void execute(){
     String radar, scanner, gps, battery, traza, mapa;
-    mapa = "map10";
+    mapa = "map1";
     login(mapa);
     
     do {
@@ -252,7 +254,7 @@ public void execute(){
         //Version usada en v2
         /*map[pos_x][pos_y] = map[pos_x][pos_y]+1; //Incremento en 1 indicando que se ha pasado una vez más por esa posición
         decidir_v2();
-        */ 
+        */
         
         //Version v3
         decidir_v3();
@@ -417,20 +419,22 @@ private Movimientos menos_reciente(){
     for(int i = 0; i < size && no_goal; ++i){
         auxpos = this.vector_to_map_pos(i, size);
         posmapvalue = map[auxpos[0]][auxpos[1]];
+        //System.out.println("["+auxpos[0]+","+auxpos[1]+"]: "+posmapvalue+"   mas_viejo="+mas_viejo);
         if(posmapvalue == -2){
             //Tenemos el objetivo
             no_goal = false;
             move_to = auxpos;
         }
         else if(posmapvalue > 0){ //Es decir no es un obstaculo
-            if(mas_viejo > posmapvalue){ //Esta casilla lleva mas tiempo sin visitarse
+            if(mas_viejo < posmapvalue){ //Esta casilla lleva mas tiempo sin visitarse
                 mas_viejo = posmapvalue; //Actualizamos el valor
                 move_to = auxpos; //Seleccionamos esta casilla como objetivo
             }
         }
     }
-    
-    return this.pos_to_move(move_to);
+   
+    Movimientos move = pos_to_move(move_to);
+    return move;
 }
 /**
      * @brief decide en función de decidir_v2() y llama al metodo menos_reciente en caso de bucle
@@ -440,14 +444,22 @@ private Movimientos menos_reciente(){
      *         </ul>
      */
 public void decidir_v3(){
+    //System.out.println("decidiendo");
+    //System.out.println("posicion serever:\nx: "+this.pos_x+"\ny: "+this.pos_y);
     this.actualiza_mpos();
+    //System.out.println("posicion actualizada mapa: \nx: "+this.mpos_x+"\ny: "+this.mpos_y);
+    
+    
     this.actualizarMapa();
     Movimientos mover = null;
     if(bateria == 1){
         mover = Movimientos.refuel;
+        System.out.println("refuel-------------");
     }
     else{
+        
         mover = this.menos_reciente();
+        
     }
     this.enviarMensajeControlador(json.encodeMove(mover,this.clave_acceso));
 }
