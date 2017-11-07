@@ -518,7 +518,7 @@ private int[] greedy_v3(){
      *  cuenta la menor distancia siempre y cuando no sea una pared
      * @autor <ul>
      * 			<li>jorge: cabecera</li>
-     * 			<li>Alejandro y Jorge: implementación </li>
+     * 			<li>@donas11 y Jorge: implementación </li>
      * 			<li>Javier y Jorge :idea inicial</li>
      *         </ul>
      */
