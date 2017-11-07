@@ -24,6 +24,7 @@ public class JSON {
     public JSON(){}
     
     /**
+     * @author Daniel Díaz Pareja
      * @brief Crea el string para el logeo con el controlador. Si hay algún 
      * sensor que no se quiere utilizar se pondrá el nombre del agente como la 
      * cadena vacía.
@@ -58,6 +59,7 @@ public class JSON {
     }
     
     /**
+     * @author Daniel Díaz Pareja
      * @brief Obtiene el estado del controlador a partir de una cadena JSON con el
      * campo "result"
      * @param cadena_json cadena JSON
@@ -82,6 +84,7 @@ public class JSON {
     }
     
     /**
+     * @author Daniel Díaz Pareja
      * @brief Obtiene la clave para conectarse al servidor a partir de un string
      * JSON y lo devuelve.
      * @param cadena_json Cadena JSON con la clave
@@ -95,6 +98,7 @@ public class JSON {
     }
     
     /**
+     * @author Daniel Díaz Pareja
      * @brief Obtiene una cadena codificada en JSON para recargar batería.
      * @param key Password obtenido en el login del agente
      * @return Cadena codificada.
@@ -109,6 +113,7 @@ public class JSON {
     }
     
     /**
+     * @author Daniel Díaz Pareja
      * @brief Obtiene una cadena codificada en JSON para moverse.
      * @param mov Movimiento del agente
      * @param key Password obtenido en el login del agente
@@ -124,6 +129,7 @@ public class JSON {
     }
     
     /**
+     * @author Daniel Díaz Pareja
      * @brief Obtiene una cadena codificada en JSON para terminar la sesión.
      * @param key Password obtenido en el login del agente
      * @return Cadena codificada.
@@ -138,6 +144,7 @@ public class JSON {
     }
     
     /**
+     * @author Daniel Díaz Pareja
      * @brief Decodifica un string JSON con la lectura del escaner y lo devuelve
      * en un array.
      * @param lectura String JSON de la lectura del escaner
@@ -156,6 +163,7 @@ public class JSON {
     }
     
     /**
+     * @author Daniel Díaz Pareja
      * @brief Decodifica un string JSON con la lectura de la batería y lo devuelve
      * en un array.
      * @param lectura String JSON de la lectura del radar
@@ -174,6 +182,7 @@ public class JSON {
     }
     
     /**
+     * @author Daniel Díaz Pareja
      * @brief Decodifica un string JSON con la lectura de la batería y 
      * lo devuelve.
      * @param lectura String JSON de la lectura de la batería.
@@ -186,6 +195,7 @@ public class JSON {
     }
     
     /**
+     * @author Daniel Díaz Pareja
      * @brief Decodifica un string JSON con la lectura del GPS y 
      * lo devuelve como un objeto Point
      * @param lectura String JSON de la lectura del GPS
@@ -202,6 +212,7 @@ public class JSON {
     }
     
     /**
+     * @author Daniel Díaz Pareja
      * @brief Crea una imagen .png a partir de una traza de datos en una cadena
      * JSON.
      * @param traza Cadena JSON de la traza.

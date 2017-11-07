@@ -1,8 +1,3 @@
-    /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package gugelcar;
 
 import es.upv.dsic.gti_ia.core.ACLMessage;
@@ -12,16 +7,16 @@ import es.upv.dsic.gti_ia.core.SingleAgent;
 import java.util.ArrayList;
 
 /**
- *
- * @author dani
+ * @brief Clase con la funcionalidad del agente que simula un coche de google
  */
 
 public class GugelCar extends SingleAgent {
-//private ArrayList<ArrayList<Integer>> map;
+
 private static final String HOST = "isg2.ugr.es";
 private static final String USER = "Boyero";
 private static final String PASSWORD = "Parra";
 private String clave_acceso;
+private final String mapa;
 private static final int PORT = 6000;
 private static final String VIRTUAL_HOST = "Cerastes";
 private int bateria;
@@ -137,7 +132,7 @@ private Movimientos pos_to_move(int[] pos){
     if(pos == null) System.out.println("Error posicion vacia en pos_to_move parametro");
     Movimientos move = null;
     
-    String cardinal = new String("");
+    String cardinal = "";
     
     
     System.out.println("current_pos:["+this.mpos_x+","+this.mpos_y+"]\npos_to_move:["+pos[0]+","+pos[1]+"]");
@@ -188,34 +183,25 @@ private Movimientos pos_to_move(int[] pos){
             break;
     }
     
-   System.out.println(move.toString());
+    System.out.println(move.toString());
     return move;
 }
 
 
- /**
-     * Función auxiliar para saber posición en el Arraylist 
-     * @param fil número de fila en la matriz
-     * @param col número de fila en la matriz
-     * @autor <ul>
-     * 			<li>@donas11 :prototipo</li>
-     * 			<li>@donas11 :programación interna </li>
-     *         </ul>
-     *//*
-private int posMatriz(int fil,int col){
-          return ((map.get(0).size())*fil)+col;
-    }
- /**
-     * Constructor
-     * @param aid
+
+    /**
+     * @brief Constructor
+     * @param aid ID del agente
+     * @param mapa Mapa al que se conectará el agente
      * @throws java.lang.Exception
      * @autor <ul>
-     * 			<li>Jorge Echevarria Tello: prototipo</li>
-     * 			<li>Daniel :programación interna </li>
+     *              <li>Jorge Echevarria Tello: cabecera</li>
+     *              <li>Daniel Díaz Pareja: implementación </li>
      *         </ul>
      */
-public GugelCar(AgentID aid) throws Exception{
+public GugelCar(AgentID aid, String mapa) throws Exception{
     super(aid);
+    this.mapa = mapa;
     lectura_escaner = new ArrayList();
     json = new JSON();
     pasos = 0;
@@ -225,32 +211,33 @@ public GugelCar(AgentID aid) throws Exception{
            map[i][j]=0;
 }
 
- /**
-     * 
-     * @param 
-     * @throws java.lang.Exception
+    /**
+     * @brief Lo que hará el agente al crearse
      * @autor <ul>
-     * 			<li>Emilien: programación inicial </li>
-     * 			<li>Daniel :programación interna </li>
+     * 			<li>Emilien: implementación inicial </li>
+     * 			<li>Daniel Díaz Pareja: implementación final </li>
      *         </ul>
      */
 @Override
 public void execute(){
-    String radar, scanner, gps, battery, traza, mapa;
-    mapa = "map9";
-    login(mapa);
+    String gps;
+    login();
     
-    do {
-        radar = recibirMensajeControlador();
-        scanner = recibirMensajeControlador();
-        gps = recibirMensajeControlador();
-        battery = recibirMensajeControlador();
+    do {// Mientras no estemos en el objetivo, lo buscamos:
         
-        this.lectura_escaner = json.decodeScanner(scanner);
-        this.lectura_radar = json.decodeRadar(radar);
+        // Recibimos los mensajes de los sensores
+        //radar = recibirMensajeControlador();
+        //scanner = recibirMensajeControlador();
+        
+        //battery = recibirMensajeControlador();
+        
+        // Recibimos y decodificamos los mensajes de los sensores
+        this.lectura_radar = json.decodeRadar(recibirMensajeControlador());
+        this.lectura_escaner = json.decodeScanner(recibirMensajeControlador());
+        gps = recibirMensajeControlador();
         this.pos_x = json.decodeGPS(gps).x;
         this.pos_y = json.decodeGPS(gps).y;
-        this.bateria = json.decodeBattery(battery);
+        this.bateria = json.decodeBattery(recibirMensajeControlador());
         
         //Version usada en v2
         /*map[pos_x][pos_y] = map[pos_x][pos_y]+1; //Incremento en 1 indicando que se ha pasado una vez más por esa posición
@@ -260,49 +247,39 @@ public void execute(){
         //Version v3
         decidir_v3();
         
+        // Recibimos y decodificamos el estado
         this.estado_actual = json.decodeEstado(recibirMensajeControlador());
-        pasos++;
+        pasos++; // Contador de los pasos que da el agente para resolver el mapa 
+             //(por tener algo de feedback además de la traza
         
         
     } while (!estoyEnObjetivo());
 
     logout();
-    // Cuando se hace el logout se quedan estos mensajes encolados, los recibo
-    // todos para poder conseguir el último mensaje: la traza
-    radar = recibirMensajeControlador();
-    scanner = recibirMensajeControlador();
-    gps = recibirMensajeControlador();
-    battery = recibirMensajeControlador();
-    this.estado_actual = json.decodeEstado(recibirMensajeControlador());
-    radar = recibirMensajeControlador();
-    scanner = recibirMensajeControlador();
-    gps = recibirMensajeControlador();
-    battery = recibirMensajeControlador();
-    traza = recibirMensajeControlador();
-    json.guardarTraza(traza, mapa+".png");
 }
 
 /**
-     * @brief Crea conexión con el servidor
+     * @brief Crea la conexión con el servidor. Es static para poder utilizarla
+     * sin tener que instanciar la clase.
      * @autor <ul>
-     * 			<li>Jorge: prototipo</li>
-     * 			<li>Daniel Díaz Pareja :programación interna </li>
+     *              <li>Jorge: cabecera</li>
+     *              <li>Daniel Díaz Pareja: implementación </li>
      *         </ul>
      */
 public static void connect(){
     AgentsConnection.connect("isg2.ugr.es",PORT,VIRTUAL_HOST,USER,PASSWORD,false);
 }
  /**
-     * @param world
-     * @brief Sirve para hacer login en un mapa
+     * @brief Hace el login del agente en el mapa dado en el constructor. Este
+     * agente tendrá todos los sensores (hemos decidido hacerlo así).
      * @autor <ul>
-     * 			<li>Jorge: prototipo</li>
-     * 			<li>Daniel Díaz Pareja :programación interna </li>
+     *              <li>Jorge: cabecera</li>
+     *              <li>Daniel Díaz Pareja :implementación </li>
      *         </ul>
      */
-public void login(String world){
+private void login(){
     String nombre = this.getAid().getLocalName();
-    String mensaje = json.encodeLoginControlador(world, nombre, nombre, nombre, nombre);
+    String mensaje = json.encodeLoginControlador(mapa, nombre, nombre, nombre, nombre);
     enviarMensajeControlador(mensaje);
     String respuesta = recibirMensajeControlador();
     if (respuesta.contains("trace"))
@@ -313,10 +290,10 @@ public void login(String world){
 
 /**
  * @author Daniel Díaz Pareja
- * @brief Envía un mensaje al controlador y devuelve la respuesta
+ * @brief Envía un mensaje al controlador
  * @param mensaje Mensaje a enviar al controlador
  */
-public void enviarMensajeControlador(String mensaje){
+private void enviarMensajeControlador(String mensaje){
     ACLMessage outbox = new ACLMessage();
     outbox.setSender(this.getAid());
     outbox.setReceiver(new AgentID(VIRTUAL_HOST));
@@ -325,14 +302,14 @@ public void enviarMensajeControlador(String mensaje){
 }
 
  /**
-     * @brief Recibe mensajes del controlador
+     * @brief Recibe un mensaje del controlador y lo imprime por pantalla.
      * @autor <ul>
-     * 			<li>Jorge : prototipo</li>
-     * 			<li>Daniel :programación interna </li>
+     * 			<li>Jorge : cabecera</li>
+     * 			<li>Daniel Díaz Pareja: implementación </li>
      *         </ul>
      * @return Mensaje del controlador
      */
-public String recibirMensajeControlador(){
+private String recibirMensajeControlador(){
     String mensaje = "vacio";
     try {
         ACLMessage inbox=this.receiveACLMessage();
@@ -345,37 +322,51 @@ public String recibirMensajeControlador(){
     return mensaje;
 }
  /**
-     * @brief Método para hacer logout
+     * @brief Método para hacer logout del servidor.
      * @autor <ul>
-     * 			<li>Jorge: prototipo</li>
-     * 			<li>Daniel Díaz Pareja:programación interna </li>
+     * 			<li>Jorge: cabecera</li>
+     * 			<li>Daniel Díaz Pareja: implementación</li>
      *         </ul>
      */
-public void logout(){
+private void logout(){
     String mensaje = json.encodeLogout(clave_acceso);
     enviarMensajeControlador(mensaje);
+    
+    // Cuando se hace el logout se quedan estos mensajes encolados, los recibimos
+    // todos para poder conseguir el último mensaje: la traza
+    recibirMensajeControlador(); // radar
+    recibirMensajeControlador(); // scanner
+    recibirMensajeControlador(); // gps
+    recibirMensajeControlador(); // battery
+    this.estado_actual = json.decodeEstado(recibirMensajeControlador());
+    
+    recibirMensajeControlador(); // radar
+    recibirMensajeControlador(); // scanner
+    recibirMensajeControlador(); // gps
+    recibirMensajeControlador(); // battery
+    json.guardarTraza(recibirMensajeControlador(), mapa+".png"); // se guarda
+        // en la carpeta del proyecto netbeans
 }
 
 
  /**
-     * @brief El metodo hace tal
+     * @brief Envía un mensaje al controlador para recargar la batería del agente.
      * @autor <ul>
-     * 			<li>Jorge: prototipo</li>
-     * 			<li>:programación interna </li>
+     *              <li>Jorge: cabecera</li>
+     *              <li>Daniel Díaz Pareja: implementación </li>
      *         </ul>
      */
-public void refuel(){
+private void refuel(){
     this.enviarMensajeControlador(json.encodeRefuel(clave_acceso));
 }
  /**
      * @brief Actualiza el mapa con las lecturas del radar e incrementa las posiciones no visitadas
      * @autor <ul>
-     * 			<li>jorge : prototipo</li>
-     * 			<li> :programación interna </li>
+     * 			<li>Jorge : cabecera</li>
      *                  <li>Javier bejar : implementacion</li>
      *         </ul>
      */
-public void actualizarMapa(){ //Recorremos toda la matriz incrementando cada posición del mapa que no sea obstaculo
+private void actualizarMapa(){ //Recorremos toda la matriz incrementando cada posición del mapa que no sea obstaculo
     //Actualización de obstaculos y objetivo
     int size = 9;//this.lectura_radar.size();
     int[] auxpos;
@@ -404,7 +395,6 @@ public void actualizarMapa(){ //Recorremos toda la matriz incrementando cada pos
 /**
      * @brief selecciona como movimiento la casilla de alrededor que mas tiempo lleve sin visitar
      * @autor <ul>
-     *
      *                  <li>Javier bejar: esqueleto</li>
      *         </ul>
      * @return movimiento, el movimiento seleccionado
@@ -441,11 +431,10 @@ private Movimientos menos_reciente(){
 /**
      * @brief decide en función de decidir_v2() y llama al metodo menos_reciente en caso de bucle
      * @autor <ul>
-     *
      *                  <li>Javier bejar: esqueleto</li>
      *         </ul>
      */
-public void decidir_v3(){
+private void decidir_v3(){
     //System.out.println("decidiendo");
     //System.out.println("posicion serever:\nx: "+this.pos_x+"\ny: "+this.pos_y);
     this.actualiza_mpos();
@@ -528,12 +517,12 @@ private int[] greedy_v3(){
      * @brief El metodo decide que movimiento realiza, simplemente teniendo en 
      *  cuenta la menor distancia siempre y cuando no sea una pared
      * @autor <ul>
-     * 			<li>jorge: prototipo</li>
-     * 			<li>@donas11 y Jorge :programación interna </li>
+     * 			<li>jorge: cabecera</li>
+     * 			<li>Alejandro y Jorge: implementación </li>
      * 			<li>Javier y Jorge :idea inicial</li>
      *         </ul>
      */
-public void decidir(){
+private void decidir(){
     Movimientos mover = null;
     
   if(bateria == 1){
@@ -599,12 +588,12 @@ public void decidir(){
      * @brief El metodo decide que movimiento realiza, teniendo en 
      *  cuenta la menor distancia siempre y cuando no sea una pared, y si ha pasado o no antes
      * @autor <ul>
-     * 			<li>jorge: prototipo</li>
-     * 			<li>Jorge :programación interna </li>
-     * 			<li>Javier y Jorge :idea inicial</li>
+     * 			<li>jorge: cabecera</li>
+     * 			<li>Jorge: implementación </li>
+     * 			<li>Javier y Jorge: idea inicial</li>
      *         </ul>
      */
-public void decidir_v2(){
+private void decidir_v2(){
     Movimientos mover = null;
   if(bateria == 1){
       mover = Movimientos.refuel;
@@ -668,11 +657,11 @@ public void decidir_v2(){
      * @brief El metodo comprueba si ya ha pasado por ese camino
      * @param movimiento, Se trata del movimiento que queremos ver si podemos realizar
      * @autor <ul>
-     * 			<li>jorge: prototipo</li>
-     * 			<li>@jorge :programación interna </li>
+     * 			<li>jorge: cabecera</li>
+     * 			<li>@jorge: implementación </li>
      *         </ul>
      */
-public boolean he_pasado(int movimiento){
+private boolean he_pasado(int movimiento){
     boolean pasado = true;
     
     switch(movimiento){ //Dependiendo del movimiento que corresponda
@@ -717,11 +706,11 @@ public boolean he_pasado(int movimiento){
  /**
      * @brief El metodo comprueba si estoy en el objetivo
      * @autor <ul>
-     * 			<li>jorge: prototipo</li>
-     * 			<li>@donas11 :programación interna </li>
+     * 			<li>jorge: cabecera</li>
+     * 			<li>@donas11: implementación </li>
      *         </ul>
      */
-public boolean estoyEnObjetivo(){
+private boolean estoyEnObjetivo(){
    
     if(lectura_radar.get(12) == 2){
         obj=true;
