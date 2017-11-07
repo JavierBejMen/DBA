@@ -43,6 +43,19 @@ private int[][] map;
 private int mpos_x; //posicion en map
 private int mpos_y; //posicion en map
 
+/*
+    Gestion de la traza para detectar mapas sin solución
+*/
+private ArrayList<Integer> sol_trace;
+/**
+ * @author Javier Bejar Mendez
+ * @brief Actualiza el vector sol_trace con los valores leidos por el radar, y 
+ * actualiza los valores de las casillas visitadas
+ */
+private void SolTracer(){
+    
+}
+
 /**
  * @author Javier Bejar Mendez
  * @brief transforma la posicion xy del vector a la posicion en map, se puede 
