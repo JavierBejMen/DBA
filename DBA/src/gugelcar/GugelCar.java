@@ -258,7 +258,8 @@ public void execute(){
         */
         
         //Version v3
-        decidir_v3();
+        decidir_v2();
+        //decidir_v3();
         
         // Recibimos y decodificamos el estado
         this.estado_actual = json.decodeEstado(recibirMensajeControlador());
