@@ -46,7 +46,7 @@ private int mpos_y; //posicion en map
 /*
     Gestion de la traza para detectar mapas sin solución
 */
-private ArrayList<Integer> sol_trace;
+private int[][] sol_trace;
 /**
  * @author Javier Bejar Mendez
  * @brief Actualiza el vector sol_trace con los valores leidos por el radar, y 
@@ -54,6 +54,16 @@ private ArrayList<Integer> sol_trace;
  */
 private void SolTracer(){
     
+    int size = 9;
+    int[] auxpos;
+    for(int i = 0; i < size; ++i){ 
+        auxpos = this.vector_to_map_pos(i, size);
+       if(sol_trace[auxpos[0]][auxpos[1]] == -1){
+                sol_trace[auxpos[0]][auxpos[1]] = this.lectura_radar.get(i+(2*(3 +(i/3)))); 
+        }
+    }
+    
+    sol_trace[this.mpos_x][this.mpos_y] = 1;
 }
 
 /**
@@ -74,6 +84,30 @@ private int[] vector_to_map_pos(int xy, int size){
     int[] pos = new int[2];
     pos[0] = this.mpos_x - mid + xy%tam;
     pos[1] = this.mpos_y - mid + xy/tam;
+    
+    return pos;
+}
+/**
+ * @author Javier Bejar Mendez
+ */
+private int[] vector_to_map_pos(int xy, int size, int[] posp){
+    int tam = (int)Math.sqrt(size);
+    int mid = tam/2;
+    int[] pos = new int[2];
+    pos[0] = posp[0] - mid + xy%tam;
+    pos[1] = posp[1] - mid + xy/tam;
+    
+    return pos;
+}
+/**
+ * @author Javier Bejar Mendez
+ */
+private Integer[] vector_to_map_pos(int xy, int size, Integer[] posp){
+    int tam = (int)Math.sqrt(size);
+    int mid = tam/2;
+    Integer[] pos = new Integer[2];
+    pos[0] = posp[0] - mid + xy%tam;
+    pos[1] = posp[1] - mid + xy/tam;
     
     return pos;
 }
@@ -200,6 +234,29 @@ private Movimientos pos_to_move(int[] pos){
     return move;
 }
 
+/**
+ * @author Javier Bejar Mendez
+ */
+private void imprimir_matriz(int longitud, Integer[] pos){
+     for(int i = pos[0]-longitud; i < longitud+pos[0]; ++i){
+        System.out.print("\nrow: "+ i+":");
+        for(int j = pos[1]-longitud; j < longitud+pos[1]; ++j){
+            System.out.print("col:"+j+",v:"+map[i][j]+" ");
+        }
+    }
+}
+/**
+ * @author Javier Bejar Mendez
+ */
+private void imprimir_matriz(int longitud, int[] pos){
+    for(int i = pos[0]-longitud; i < longitud+pos[0]; ++i){
+        System.out.print("\nrow: "+ i+":");
+        for(int j = pos[1]-longitud; j < longitud+pos[1]; ++j){
+            System.out.print("col:"+j+",v:"+map[i][j]+" ");
+        }
+    }
+}
+
 
 
     /**
@@ -219,9 +276,13 @@ public GugelCar(AgentID aid, String mapa) throws Exception{
     json = new JSON();
     pasos = 0;
     map = new int[TAM_X][TAM_Y]; //Inicializo el mapa a 0, indicando las veces que se ha pasado por la posicion i j
+    sol_trace= new int[TAM_X][TAM_Y];
     for (int i = 0; i < TAM_X; i++)
-       for (int j = 0; j < TAM_Y; j++)
+       for (int j = 0; j < TAM_Y; j++){
            map[i][j]=0;
+           sol_trace[i][j]=-1;
+       }
+           
 }
 
     /**
@@ -258,7 +319,7 @@ public void execute(){
         */
         
         //Version v3
-        decidir_v3();
+       decidir_v3();
         
         // Recibimos y decodificamos el estado
         this.estado_actual = json.decodeEstado(recibirMensajeControlador());
@@ -381,15 +442,15 @@ private void refuel(){
      */
 private void actualizarMapa(){ //Recorremos toda la matriz incrementando cada posición del mapa que no sea obstaculo
     //Actualización de obstaculos y objetivo
-    int size = 9;//this.lectura_radar.size();
+    int size = this.lectura_radar.size();
     int[] auxpos;
     for(int i = 0; i < size; ++i){ //recorremos todo el vector donde esta el radar
         auxpos = this.vector_to_map_pos(i, size);
        if(map[auxpos[0]][auxpos[1]] != -1){ //Si nuestro mapa no es obstaculo (!=-1)
-           if(this.lectura_radar.get(i+(2*(3 +(i/3)))) == 1){ //Si el radar  es obstaculo (=1)
+           if(this.lectura_radar.get(i)== 1){//i+(2*(3 +(i/3)))) == 1){ //Si el radar  es obstaculo (=1)
                 map[auxpos[0]][auxpos[1]] = -1; //añadimos el obstaculo a nuestro mapa
            }
-           else if(this.lectura_radar.get(i+(2*(3 +(i/3)))) == 2){//Si el radar es el objetivo
+           else if(this.lectura_radar.get(i)== 2){//i+(2*(3 +(i/3)))) == 2){//Si el radar es el objetivo
                map[auxpos[0]][auxpos[1]] = -2; //añadimos el objetivo a nuestro mapa
            }
        }
@@ -455,6 +516,8 @@ private void decidir_v3(){
     
     
     this.actualizarMapa();
+    this.SolTracer();
+    
     Movimientos mover = null;
     int[] move_to = null;
     if(bateria == 1){
@@ -486,12 +549,95 @@ private void decidir_v3(){
      */ 
 private boolean no_solucion(){//No funciona
     boolean no_sol = true;
-    for(int i = 0; i < TAM_X; ++i){
-        for(int j = 0; j < TAM_Y;++j){
-            if(map[i][j] > pasos) no_sol = false;
+    
+  
+    return (no_sol);
+}
+
+
+/**
+ * @author Javier Bejar Mendez
+ */
+private boolean camino_contiene_pos(ArrayList<String> camino_card){
+    boolean contiene = false;
+    int size = camino_card.size();
+    int c_r = 0;
+    int c_l = 0;
+    String card_r, card_l;
+    card_r = camino_card.get(0);
+    card_l = camino_card.get(size-1);
+    for(int i = 1; i < size; ++i){
+        
+        if(camino_card.get(i) == next_card(card_r)){
+            ++c_r;
+        }else if(card_r != camino_card.get(i)){
+            --c_r; 
         }
+        card_r = camino_card.get(i);
+        if(camino_card.get(size-1-i) == next_card(card_l)){
+            ++c_l;
+        }else if(card_l != camino_card.get(size-1-i)){
+            --c_l; 
+        }
+        card_r = camino_card.get(i);
+        card_l = camino_card.get(size-1-i);
     }
-    return no_sol;
+    return (c_r == 8 || c_l == 8);
+}
+/**
+ * @author Javier Bejar Mendez
+ */
+private String next_card(String card){
+    switch(card){
+        case "n":
+            card = "ne";
+            break;
+        case "s"  :
+            card = "so";
+            break;
+        case "o":
+           card = "no";
+            break;
+        case "e":
+            card = "se";
+            break;
+        case "no":
+            card = "n";
+            break;
+        case "ne":
+            card = "e";
+            break;
+        case "so"  :
+            card = "o";
+            break;
+        case "se"  :
+            card = "s";
+            break;
+        default:
+            System.out.println("Se ha recibido un cardinal incorrecto");
+            break;
+    }
+    return card;
+}
+/**
+ * @author Javier Bejar Mendez
+ */
+private String card_pos(Integer[] pos1, Integer[] pos2){
+    String cardinal = "";
+    if(pos1[1] < pos2[1]){
+        cardinal += "n";
+    }else if(pos1[1] > pos2[1]){
+        cardinal += "s";
+    }
+    
+    if(pos1[0] < pos2[0]){
+        cardinal += "o";
+    }else if(pos1[0] > pos2[0]){
+        cardinal += "e";
+    }
+    
+    
+    return cardinal;
 }
 /**
      * @brief greedy para v3
