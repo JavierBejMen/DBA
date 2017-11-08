@@ -548,13 +548,105 @@ private void decidir_v3(){
      * @return true si el mapa no tiene solucion, false si no se sabe
      */ 
 private boolean no_solucion(){//No funciona
-    boolean no_sol = true;
+    boolean no_sol = false;
     
+    Integer[] sol = new Integer[2];
+    
+    for(int i = 0; i < TAM_X && !no_sol; ++i){
+        for(int j = 0; j < TAM_Y && !no_sol; ++j){
+            if(map[i][j] == -2){
+                sol[0] = i;
+                sol[1] = j;
+            }
+        }
+    }
+    
+    no_sol = is_rodeada(sol);
   
-    return (no_sol);
+    return no_sol;
+}
+/**
+ * @author Javier Bejar Mendez
+ */
+private boolean is_rodeada(Integer[] sol){
+    boolean rodeada = false;
+    
+    ArrayList<Integer[]> camino_pos = new ArrayList();
+    ArrayList<String> camino_card = new ArrayList();
+    
+    Integer[] pos_init = new Integer[2];
+    Integer[] pos_sig = new Integer[2];
+    
+    for(int i = sol[0]-1; i >= MARGIN_X && !rodeada; --i){
+        
+        if(map[i][sol[1]] == -1){
+            
+            camino_pos.clear();
+            camino_card.clear();
+        
+            pos_init[0] = i;
+            pos_init[1] = sol[1];
+            
+            camino_pos.add(pos_init);
+            camino_card.add(card_pos(pos_init, sol));
+            
+            for(int j = 1; j < 9 && !rodeada; j+=2){
+                
+                pos_sig = this.vector_to_map_pos(j, 9, pos_init);
+                
+                if(!(pos_init[0] == pos_sig[0] && pos_init[1] == pos_sig[1]) &&
+                  map[pos_sig[0]][pos_sig[1]] == -1){
+                    
+                    camino_pos.add(pos_sig);
+                    camino_card.add(card_pos(pos_sig, sol));
+                    
+                    rodeada = contenido_camino(sol, camino_pos, camino_card);
+                    
+                    camino_pos.remove(1);
+                    camino_card.remove(1);
+                }
+            }
+        }
+    }
+    
+    return rodeada;
 }
 
-
+/**
+ * @author Javier Bejar Mendez
+ */
+private boolean contenido_camino(Integer[] sol, ArrayList<Integer[]> camino_pos,
+                                ArrayList<String> camino_card){
+    if(camino_pos.get(0)[0] == camino_pos.get(camino_pos.size()-1)[0] &&
+            camino_pos.get(0)[1] == camino_pos.get(camino_pos.size()-1)[1]){
+        System.out.println("SE HA ENCONTRADO UN CAMINO ===========><><=========<><>==========>>>>>>>");
+        
+        return camino_contiene_pos(camino_card);
+    }
+    else{
+        Integer[] pos_sig = new Integer[2];
+        
+        for(int i = 1; i < 9; i+=2){
+            pos_sig = this.vector_to_map_pos(i, 9, camino_pos.get(camino_pos.size()-1));
+            
+            if(!(pos_sig[0] == camino_pos.get(camino_pos.size()-1)[0] &&
+                    pos_sig[1] == camino_pos.get(camino_pos.size()-1)[1]) &&
+                        map[pos_sig[0]][pos_sig[1]] == -1){
+                
+                camino_pos.add(pos_sig);
+                camino_card.add(card_pos(pos_sig, sol));
+                
+                if(contenido_camino(sol, camino_pos, camino_card)){
+                    return true;
+                }else{
+                    camino_pos.remove(camino_pos.size()-1);
+                    camino_card.remove(camino_card.size()-1);
+                }
+            }
+        }
+        return false;
+    }
+}
 /**
  * @author Javier Bejar Mendez
  */
