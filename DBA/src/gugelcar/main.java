@@ -58,7 +58,7 @@ public class main {
         System.out.println("Prueba punto del GPS: (x=" + punto.x + ", y=" + punto.y + ")");*/
         GugelCar.connect();
         try {
-            GugelCar c = new GugelCar(new AgentID("volswagen"), "map11");
+            GugelCar c = new GugelCar(new AgentID("volks"), "map2");
             c.run();
         } catch (Exception ex) {
             System.out.println("Error al crear el agente.");

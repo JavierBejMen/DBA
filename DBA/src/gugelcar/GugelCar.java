@@ -1,10 +1,13 @@
 package gugelcar;
 
+import edu.emory.mathcs.backport.java.util.Collections;
 import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.AgentsConnection;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 import java.util.ArrayList;
+
+
 
 /**
  * @brief Clase con la funcionalidad del agente que simula un coche de google
@@ -43,6 +46,15 @@ private int[][] map;
 private int mpos_x; //posicion en map
 private int mpos_y; //posicion en map
 
+
+/*
+* @autor donas11
+*/
+private ArrayList<Prueba> distancias_menores=new ArrayList<Prueba>();
+private float menor_distancia=99999999;
+private int x_menor=0;
+private int y_menor=0;
+private boolean noosol=false;
 /*
     Gestion de la traza para detectar mapas sin solución
 */
@@ -491,7 +503,11 @@ private boolean no_solucion(){//No funciona
             if(map[i][j] > pasos) no_sol = false;
         }
     }
-    return no_sol;
+    if(noosol){
+        return true;
+    }else{
+        return no_sol;
+    }
 }
 /**
      * @brief greedy para v3
@@ -499,6 +515,7 @@ private boolean no_solucion(){//No funciona
      * @return 
      */ 
 private int[] greedy_v3(){
+
     float mas_cercano = 999999;
     int[] auxpos;
     int size = 9;
@@ -522,8 +539,34 @@ private int[] greedy_v3(){
             }
         }
     }
-   
     
+    /*
+    * @autor donas11
+    */
+    
+    if(!distancias_menores.isEmpty()){
+        for(int i=0;i<distancias_menores.size();i++){
+            if(distancias_menores.get(i).getvalor()==mas_cercano && distancias_menores.get(i).getx()==pos_x && distancias_menores.get(i).gety()==pos_y){
+                int vec=distancias_menores.get(i).getveces();
+                distancias_menores.get(i).setveces(vec+1);
+                if(distancias_menores.get(i).getveces()>=5){
+                            move_to=null;
+                            noosol=true;
+                }
+            }
+        }
+    }
+    if(this.menor_distancia<mas_cercano){
+        distancias_menores.add(new Prueba(pos_x,pos_y,mas_cercano,0));
+		this.menor_distancia=mas_cercano;
+		this.x_menor=pos_x;
+		this.y_menor=pos_y;
+    }
+   Collections.sort(distancias_menores);
+    /*
+    * fin @autor donas11
+    */
+
     return move_to;
 }
  /**
