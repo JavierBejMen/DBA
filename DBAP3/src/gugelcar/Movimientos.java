@@ -5,5 +5,5 @@ package gugelcar;
  * @author Daniel Díaz Pareja, Javier Bejar Mendez
  */
 public enum Movimientos {
-    moveN, moveS, moveE, moveW, moveNE, moveNW, moveSE, moveSW,refuel;
+    moveN, moveS, moveE, moveW, moveNE, moveNW, moveSE, moveSW, refuel;
 }

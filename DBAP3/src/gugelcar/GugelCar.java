@@ -1,11 +1,11 @@
 package gugelcar;
 
+import JSON.JSON;
 import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.AgentsConnection;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 import java.util.ArrayList;
-import gugelcar.exceptions.*;
 
 /**
  * @brief Clase con la funcionalidad del agente que simula un coche de google
@@ -24,7 +24,6 @@ private int bateria;
 Posicion serverPos;
 private ArrayList<Float> lectura_escaner;
 private ArrayList<Integer> lectura_radar;
-private Estados estado_actual;
 private final JSON json;
 private int pasos;
 boolean obj = false;
@@ -81,33 +80,13 @@ public void execute(){
     do {// Mientras no estemos en el objetivo, lo buscamos:
         
         // Recibimos los mensajes de los sensores
-        //radar = recibirMensajeControlador();
-        //scanner = recibirMensajeControlador();
-        
-        //battery = recibirMensajeControlador();
-        
-        // Recibimos y decodificamos los mensajes de los sensores
         this.lectura_radar = json.decodeRadar(recibirMensajeControlador());
         this.lectura_escaner = json.decodeScanner(recibirMensajeControlador());
         gps = recibirMensajeControlador();
         this.serverPos.setX(json.decodeGPS(gps).x);
         this.serverPos.setY(json.decodeGPS(gps).y);
         this.bateria = json.decodeBattery(recibirMensajeControlador());
-        
-        //Version usada en v2
-        /*map[pos_x][pos_y] = map[pos_x][pos_y]+1; //Incremento en 1 indicando que se ha pasado una vez más por esa posición
-        decidir_v2();
-        */
-        
-        //Version v3
-       //decidir_v3();
-        
-        // Recibimos y decodificamos el estado
-        this.estado_actual = json.decodeEstado(recibirMensajeControlador());
         pasos++; // Contador de los pasos que da el agente para resolver el mapa 
-             //(por tener algo de feedback además de la traza
-        
-        
     } while (!estoyEnObjetivo());
 
     logout();
@@ -116,10 +95,7 @@ public void execute(){
 /**
      * @brief Crea la conexión con el servidor. Es static para poder utilizarla
      * sin tener que instanciar la clase.
-     * @autor <ul>
-     *              <li>Jorge: cabecera</li>
-     *              <li>Daniel Díaz Pareja: implementación </li>
-     *         </ul>
+     * @autor Jorge, Dani
      */
 public static void connect(){
     AgentsConnection.connect("isg2.ugr.es",PORT,VIRTUAL_HOST,USER,PASSWORD,false);
@@ -127,10 +103,7 @@ public static void connect(){
  /**
      * @brief Hace el login del agente en el mapa dado en el constructor. Este
      * agente tendrá todos los sensores (hemos decidido hacerlo así).
-     * @autor <ul>
-     *              <li>Jorge: cabecera</li>
-     *              <li>Daniel Díaz Pareja :implementación </li>
-     *         </ul>
+     * @autor Jorge, Dani
      */
 private void login(){
     String nombre = this.getAid().getLocalName();
@@ -144,7 +117,7 @@ private void login(){
 }
 
 /**
- * @author Daniel Díaz Pareja
+ * @author Dani
  * @brief Envía un mensaje al controlador
  * @param mensaje Mensaje a enviar al controlador
  */
@@ -193,7 +166,6 @@ private void logout(){
     recibirMensajeControlador(); // scanner
     recibirMensajeControlador(); // gps
     recibirMensajeControlador(); // battery
-    this.estado_actual = json.decodeEstado(recibirMensajeControlador());
     
     recibirMensajeControlador(); // radar
     recibirMensajeControlador(); // scanner
