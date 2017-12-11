@@ -27,6 +27,7 @@ public class AgenteVehiculo extends SingleAgent{
     private String conversation_id; //ID de la conversación de la sesión
     
     //Atributos propios de cada agente
+    private AgentType tipo;
     private int bateria;
     private int fuelrate;
     private int range;
