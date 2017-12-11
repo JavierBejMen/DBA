@@ -57,6 +57,8 @@ public class AgenteMapa extends SingleAgent{
         
         //Controlamos que todos los agentes han sido creados correctamente y recibimos sus datos
         
+        //Inicializamos el mapa
+        
         //bucle principal
         do{
             
