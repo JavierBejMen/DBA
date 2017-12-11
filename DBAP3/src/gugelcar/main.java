@@ -6,6 +6,7 @@
 package gugelcar;
 
 import es.upv.dsic.gti_ia.core.AgentID;
+import es.upv.dsic.gti_ia.core.AgentsConnection;
 /**
  *
  * @author Daniel
@@ -16,10 +17,12 @@ public class main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        GugelCar.connect();
+        //Poner datos correctos para la conexion!!!!!!!!!
+        AgentsConnection.connect("isg2.ugr.es",6000, "test", "guest", "guest", false); 
+        
+        
         try {
-            GugelCar c = new GugelCar(new AgentID("sadfasdfsadf"), "map9");
-            c.run();
+            
         } catch (Exception ex) {
             System.out.println("Error: "+ex.getMessage());
         }
