@@ -18,18 +18,30 @@ import java.util.ArrayList;
  */
 public class AgenteVehiculo extends SingleAgent{
     
-    private String conversation_id;
+    private AgentID aid; //ID de este agente
+    private AgentID agente_mapa_id; //ID del agente mapa
+    private AgentID controlador_id; //ID del controador del servidor
+    //Puede ser que necesitemos los ID de los demás agentes vehiculos, el martes lo resolvemos
+    
+    
+    private String conversation_id; //ID de la conversación de la sesión
+    
+    //Atributos propios de cada agente
     private int bateria;
     private int fuelrate;
     private int range;
     private boolean fly;
     private boolean estoy_en_objetivo;
-    private Posicion serverPos;
+    private Posicion serverPos; //No tengo claro si tenemos distinción entre internalPos y serverPos, el martes lo resolvemos.
     
-    
+    /**
+     * @brief Constructor
+     * @author Javier Bejar Mendez
+     */
     public AgenteVehiculo(AgentID aid, String cid) throws Exception{
         super(aid);
         this.conversation_id = cid;
+        this.aid = aid;
     }
     
     /**

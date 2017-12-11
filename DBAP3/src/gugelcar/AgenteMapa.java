@@ -17,13 +17,28 @@ import java.util.ArrayList;
  * @author Javier Bejar Mendez
  */
 public class AgenteMapa extends SingleAgent{
+    
+    private AgentID aid; //ID de este agente
+    private AgentID controlador_id; //ID del agente controlador del servidor
+    
+    private AgentID aid1; //ID del Agente Vehiculo 1
+    private AgentID aid2; //ID del Agente Vehiculo 2
+    private AgentID aid3; //ID del Agente Vehiculo 3
+    private AgentID aid4; //ID del Agente Vehiculo 4
+    
+    private String conversation_id; //ID de la conversación de la sesión actual
+    
+    //Atributos propios del Agente Mapa
     private Mapa map;
     private String nameMap;
-    private String conversation_id;
     
+    /**
+     * @brief Constructor
+     * @author Javier Bejar Mendez
+     */
     public AgenteMapa(AgentID aid) throws Exception{
-        
         super(aid);
+        this.aid = aid;
     }
     
    
