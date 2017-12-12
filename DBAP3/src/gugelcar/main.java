@@ -19,10 +19,11 @@ public class main {
      */
     public static void main(String[] args) {
         //Poner datos correctos para la conexion!!!!!!!!!
-        String nombreServidor = "Nombre";
+        String nombreServidor = "Cerastes";
         AgentsConnection.connect("isg2.ugr.es",6000, nombreServidor, "Boyero", "Parra", false);
         try {
             AgenteMapa mapa = new AgenteMapa(new AgentID("agenteMapa"), "map1", new AgentID(nombreServidor));
+            mapa.run();
         } catch (Exception ex) {
             System.out.println("Error: "+ex.getMessage());
         }

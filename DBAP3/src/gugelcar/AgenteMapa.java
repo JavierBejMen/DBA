@@ -62,7 +62,7 @@ public class AgenteMapa extends SingleAgent{
         try {
             ACLMessage inbox = this.receiveACLMessage();
             System.out.println(inbox.getContent());
-            if (inbox.getPerformative().equals("INFORM") && inbox.getContent() == "OK") {
+            if (inbox.getPerformative().equals("INFORM")) {
                 this.conversation_id = inbox.getConversationId();
                 System.out.println("\nRecibido conversation id "
                 +inbox.getConversationId()+" de "+inbox.getSender().getLocalName());
