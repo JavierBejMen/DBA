@@ -179,6 +179,45 @@ public class JSON {
     }
     
     /**
+     * @author Emilien Giard
+     * @brief Decodifica un string JSON con la command de un vehiculo
+     * por el AgenteMapa y lo devuelve.
+     * @param json String JSON con la command.
+     * @return String de la command.
+     */
+    public String decodeCommandVehiculo(String json){
+        JSONObject obj = new JSONObject(json);
+        return (obj.getString("command"));
+    }
+
+    /**
+     * @author Emilien Giard
+     * @brief Decodifica un string JSON con los percepciones de un vehiculo
+     * por el AgenteMapa y lo devuelve.
+     * @param json String JSON con los percepciones.
+     * @return matriz de los percepciones.
+     */
+    public Integer[][] decodePercepciones(String json){
+        JSONObject obj = new JSONObject(json);
+        JSONArray array = obj.getJSONArray("percepciones");
+        // get the number of case of the perceptions' side
+        int length = array.length() / array.length();
+        Integer[][] percepciones = new Integer[length][length];
+        int i = 0, j = 0;
+        for (Object o : array) {
+            percepciones[i][j] = (Integer)o;
+            i ++;
+            // at the end of a line, go to the first column of the next line
+            if (i == (length - 1)){
+                i = 0;
+                j++;
+            }
+        }
+
+        return percepciones;
+    }
+
+    /**
      * @author Dani
      * @brief Crea una imagen .png a partir de una traza de datos en una cadena
      * JSON.
