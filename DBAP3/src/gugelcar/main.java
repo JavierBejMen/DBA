@@ -17,8 +17,8 @@ public class main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        //Poner datos correctos para la conexion!!!!!!!!!
-        AgentsConnection.connect("isg2.ugr.es",6000, "test", "guest", "guest", false); 
+        
+        AgentsConnection.connect("isg2.ugr.es",6000, "Cerastes", "Boyero", "Parra", false); 
         
         
         try {
