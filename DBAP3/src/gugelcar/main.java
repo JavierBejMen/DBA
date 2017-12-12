@@ -15,14 +15,14 @@ public class main {
     
      /**
      * @param args the command line arguments
+     * @author Emilien Giard
      */
     public static void main(String[] args) {
-        
-        AgentsConnection.connect("isg2.ugr.es",6000, "Cerastes", "Boyero", "Parra", false); 
-        
-        
+        //Poner datos correctos para la conexion!!!!!!!!!
+        String nombreServidor = "Nombre";
+        AgentsConnection.connect("isg2.ugr.es",6000, nombreServidor, "Boyero", "Parra", false);
         try {
-            
+            AgenteMapa mapa = new AgenteMapa(new AgentID("agenteMapa"), "map1", new AgentID(nombreServidor));
         } catch (Exception ex) {
             System.out.println("Error: "+ex.getMessage());
         }

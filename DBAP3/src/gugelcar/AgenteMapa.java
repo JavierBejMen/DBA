@@ -31,32 +31,82 @@ public class AgenteMapa extends SingleAgent{
     //Atributos propios del Agente Mapa
     private Mapa map;
     private String nameMap;
+    private final JSON json;
     
     /**
      * @brief Constructor
-     * @author Javier Bejar Mendez
+     * @author Javier Bejar Mendez y Emilien Giard
      */
-    public AgenteMapa(AgentID aid) throws Exception{
+    public AgenteMapa(AgentID aid, String nameMap, AgentID controlador_id) throws Exception{
         super(aid);
         this.aid = aid;
+        this.nameMap = nameMap;
+        this.controlador_id = controlador_id;
+        json = new JSON();
     }
     
    
     /**
      * Metodo que se suscribe y recibe el id de conversación
+     * @author Emilien Giard
      */
-    public void suscribe(){}
-    
-    
+    public void suscribe(){
+        String world = json.encodeWorld(this.nameMap);
+        ACLMessage outbox = new ACLMessage();
+        outbox.setSender(this.getAid());
+        outbox.setReceiver(this.controlador_id);
+        outbox.setContent(world);
+        outbox.setPerformative("SUBSCRIBE");
+        this.send(outbox);
+        
+        try {
+            ACLMessage inbox = this.receiveACLMessage();
+            System.out.println(inbox.getContent());
+            if (inbox.getPerformative().equals("INFORM") && inbox.getContent() == "OK") {
+                this.conversation_id = inbox.getConversationId();
+                System.out.println("\nRecibido conversation id "
+                +inbox.getConversationId()+" de "+inbox.getSender().getLocalName());
+            } else {
+                System.out.println("\nRecibido error "
+                +inbox.getPerformative()+" de razon "+inbox.getContent());
+            }
+        } catch (InterruptedException ex) {
+            System.out.println("Error al recibir mensaje" + ex.getMessage());
+        }
+    }
+
+    /**
+     * Metodo que crea los vehiculos
+     * @author Emilien Giard
+     */
      @Override
     public void execute(){
         //Nos suscribimos y controlamos errores
-        suscribe();
-        
+        do {
+            suscribe();
+        } while(this.conversation_id != null);
+        AgenteVehiculo vehiculo1, vehiculo2, vehiculo3, vehiculo4;
+
         //Difundimos el id de conversación y creamos los agentes
-        
+        try {
+            this.aid1 = new AgentID("vehiculo1");
+            vehiculo1 = new AgenteVehiculo(this.aid1, this.conversation_id);
+            vehiculo1.execute();
+
+            vehiculo2 = new AgenteVehiculo(this.aid2, this.conversation_id);
+            vehiculo2.execute();
+
+            vehiculo3 = new AgenteVehiculo(this.aid3, this.conversation_id);
+            vehiculo3.execute();
+
+            vehiculo4 = new AgenteVehiculo(this.aid4, this.conversation_id);
+            vehiculo4.execute();
+        } catch (Exception ex) {
+            System.out.println("Error al creacion del vehiculo:" + ex.getMessage());
+        }
+
         //Controlamos que todos los agentes han sido creados correctamente y recibimos sus datos
-        
+
         //Inicializamos el mapa
         
         //bucle principal
