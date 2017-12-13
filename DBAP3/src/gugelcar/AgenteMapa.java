@@ -29,7 +29,11 @@ public class AgenteMapa extends SingleAgent{
     //Atributos propios del Agente Mapa
     private Mapa map;
     private final String nameMap;
-    private final JSON json;
+    
+    //Comunicacion
+    private final JSON jsonobj;
+    private ACLMessage outbox;
+    private ACLMessage inbox;
     
     /**
      * @param aid del AgenteMapa
@@ -51,7 +55,7 @@ public class AgenteMapa extends SingleAgent{
         this.aid4 = aid4;
         this.nameMap = nameMap;
         this.controlador_id = controlador_id;
-        json = new JSON();
+        jsonobj = new JSON();
     }
     
    
@@ -60,8 +64,8 @@ public class AgenteMapa extends SingleAgent{
      * @author Emilien Giard
      */
     public void suscribe(){
-        String world = json.encodeWorld(this.nameMap);
-        ACLMessage outbox = new ACLMessage();
+        String world = jsonobj.encodeWorld(this.nameMap);
+        outbox = new ACLMessage();
         outbox.setSender(this.getAid());
         outbox.setReceiver(this.controlador_id);
         outbox.setContent(world);
@@ -69,14 +73,13 @@ public class AgenteMapa extends SingleAgent{
         this.send(outbox);
         
         try {
-            ACLMessage inbox = this.receiveACLMessage();
+            inbox = this.receiveACLMessage();
             if (inbox.getPerformative().equals("INFORM")) {
                 this.conversation_id = inbox.getConversationId();
                 System.out.println("\nRecibido conversation id "
                 +inbox.getConversationId()+" de "+inbox.getSender().getLocalName());
             } else {
-                System.out.println("\nRecibido error "
-                +inbox.getPerformative()+" de razon "+inbox.getContent());
+               System.out.println("Error: In suscribe conversation, received: "+jsonobj.decodeErrorControlador(inbox.getPerformative()));
             }
         } catch (InterruptedException ex) {
             System.out.println("Error al recibir mensaje" + ex.getMessage());
@@ -105,25 +108,24 @@ public class AgenteMapa extends SingleAgent{
      @Override
     public void execute(){
         //Nos suscribimos y controlamos errores
-        do {
-            suscribe();
-        } while(this.conversation_id != null);
-        AgenteVehiculo vehiculo1, vehiculo2, vehiculo3, vehiculo4;
-
+        logOut();
+        suscribe();
+        
         //Difundimos el id de conversación y creamos los agentes
+        AgenteVehiculo vehiculo1, vehiculo2, vehiculo3, vehiculo4;
         try {
             this.aid1 = new AgentID("vehiculo1");
-            vehiculo1 = new AgenteVehiculo(this.aid1, this.conversation_id);
-            vehiculo1.execute();
+            vehiculo1 = new AgenteVehiculo(this.aid1, this.conversation_id, this.aid, this.controlador_id);
+            //vehiculo1.execute();
 
-            vehiculo2 = new AgenteVehiculo(this.aid2, this.conversation_id);
-            vehiculo2.execute();
+            vehiculo2 = new AgenteVehiculo(this.aid2, this.conversation_id, this.aid, this.controlador_id);
+            //vehiculo2.execute();
 
-            vehiculo3 = new AgenteVehiculo(this.aid3, this.conversation_id);
-            vehiculo3.execute();
+            vehiculo3 = new AgenteVehiculo(this.aid3, this.conversation_id, this.aid, this.controlador_id);
+            //vehiculo3.execute();
 
-            vehiculo4 = new AgenteVehiculo(this.aid4, this.conversation_id);
-            vehiculo4.execute();
+            vehiculo4 = new AgenteVehiculo(this.aid4, this.conversation_id, this.aid, this.controlador_id);
+            //vehiculo4.execute();
         } catch (Exception ex) {
             System.out.println("Error al creacion del vehiculo:" + ex.getMessage());
         }
@@ -133,19 +135,19 @@ public class AgenteMapa extends SingleAgent{
         //bucle principal
         do {
             try {
-                ACLMessage inbox = this.receiveACLMessage();
-                String command = json.decodeCommandVehiculo(inbox.getContent());
+                inbox = this.receiveACLMessage();
+                String command = jsonobj.decodeCommandVehiculo(inbox.getContent());
                 System.out.println("\nRecibido command"
                     + command +" de "+inbox.getSender().getLocalName());
                 if (command.equals("update-map")) {
-                    Integer[][] percepciones = json.decodePercepciones(inbox.getContent());
+                    Integer[][] percepciones = jsonobj.decodePercepciones(inbox.getContent());
                     // TODO: update the AgenteMapa's mapa with the perceptions
                     this.updateMap(percepciones);
                     // TODO: send the global map to the other agent and if he is in the objective
                     this.enviarMapa();
                 } else if (command.equals("export-map")) {
                 } else {
-                    ACLMessage outbox = new ACLMessage();
+                    outbox = new ACLMessage();
                     outbox.setSender(this.getAid());
                     outbox.setReceiver(new AgentID(inbox.getSender().getLocalName()));
                     outbox.setPerformative("NOT-UNDERSTOOD");
@@ -162,4 +164,16 @@ public class AgenteMapa extends SingleAgent{
         //Terminamos la sesión y realizamos las comunicaciones en caso de ser necesarias con el resto de agentes
     }
     
+    /**
+     * Logout para desloguearse del servidor
+     * @author Javier Bejar Mendez
+     */
+    public void logOut(){
+        System.out.println("\nLOGOUT\n");
+        outbox = new ACLMessage();
+        outbox.setSender(this.getAid());
+        outbox.setReceiver(this.controlador_id);
+        outbox.setPerformative(ACLMessage.CANCEL);
+        outbox.setContent("");
+    }
 }

@@ -37,8 +37,8 @@ public class AgenteVehiculo extends SingleAgent{
     
     //Comunicacion
     private final JSON jsonobj;
-    ACLMessage outbox = null;
-    ACLMessage inbox = null;
+    private ACLMessage outbox = null;
+    private ACLMessage inbox = null;
     /**
      * Define el tipo del agente según los parámetros recibidos por el servidor,
      * puede ser Car, Truck o Drone.
@@ -133,6 +133,7 @@ public class AgenteVehiculo extends SingleAgent{
         registrarse();
         
         //Luego notificamos al agente mapa el tipo de vehiculo y demas datos
+        notifyParam();
         
         //Bucle principal
         do{
