@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import gugelcar.AgenteVehiculo;
 
 /**
  * @author Dani
@@ -82,6 +83,41 @@ public class JSON {
         lista.add(capabilities.getBoolean("fly"));
         
         return lista;
+    }
+    
+    /**
+     * Decodifica todos los parámetros del agente en un ArrayList con la siguiente 
+     * estructura: {AgentType tipo, int bateria, int fuelrate, int range, boolean fly}.
+     * 
+     * @author Javier Bejar Mendez
+     */
+    public ArrayList<Object> decodeAgentParam(String paramstring){
+        JSONObject obj = new JSONObject(paramstring);
+         
+        ArrayList<Object> lista = new ArrayList();
+        lista.add(obj.getJSONObject("tipo"));
+        lista.add(obj.getInt("bateria"));
+        lista.add(obj.getInt("range"));
+        lista.add(obj.getInt("fuelrate"));
+        lista.add(obj.getBoolean("fly"));
+        
+        return lista;
+    }
+    /**
+     * Codifica en JSON los parámetros de un vehiculo
+     * @param vehiculo
+     * @return String en formato JSON con los parámetros del vehículo
+     * @author Javier Bejar Mendez
+     */
+    public String encondeAgentParam(AgenteVehiculo vehiculo){
+        JSONObject obj = new JSONObject();
+        obj.put("tipo", vehiculo.getTipo());
+        obj.put("bateria", vehiculo.getBateria());
+        obj.put("range", vehiculo.getRange());
+        obj.put("fuelrate", vehiculo.getFuelrate());
+        obj.put("fly", vehiculo.getFly());
+        
+        return obj.toString();
     }
     
     /**

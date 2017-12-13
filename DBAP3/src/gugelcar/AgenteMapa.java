@@ -12,7 +12,7 @@ import es.upv.dsic.gti_ia.core.SingleAgent;
 
 /**
  *
- * @author Javier Bejar Mendez
+ * @author Javier Bejar Mendez,Emilien Giard
  */
 public class AgenteMapa extends SingleAgent{
     
@@ -100,7 +100,7 @@ public class AgenteMapa extends SingleAgent{
 
     /**
      * Metodo que crea los vehiculos y recibe los messajes de los vehiculos
-     * @author Emilien Giard
+     * @author Emilien Giard, Javier Bejar Mendez
      */
      @Override
     public void execute(){
