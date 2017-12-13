@@ -18,20 +18,46 @@ public class main {
      * @author Emilien Giard
      */
     public static void main(String[] args) {
-        //Poner datos correctos para la conexion!!!!!!!!!
-        String nombreServidor = "Cerastes";
-        AgentsConnection.connect("isg2.ugr.es",6000, nombreServidor, "Boyero", "Parra", false);
+
+        String controlador_name = "Cerastes";
+        String agente_mapa_name = "AgenteMapa";
+        String vehiculo1_name = "vehiculo1";
+        String vehiculo2_name = "vehiculo2";
+        String vehiculo3_name = "vehiculo3";
+        String vehiculo4_name = "vehiculo4";
+        
+        String mapName = "map1";
+        
+        AgentID controlador_id, agente_mapa_id, vehiculo1_id, vehiculo2_id, vehiculo3_id, vehiculo4_id;
+        
         try {
-            AgenteMapa mapa = new AgenteMapa(
-                    new AgentID("agenteMapa"),
-                    "map1",
-                    new AgentID(nombreServidor),
-                    new AgentID("vehiculo1"),
-                    new AgentID("vehiculo2"),
-                    new AgentID("vehiculo3"),
-                    new AgentID("vehiculo4")
-            );
-            mapa.run();
+            //Conectarse al servidor
+            AgentsConnection.connect("isg2.ugr.es",6000, controlador, "Boyero", "Parra", false);
+            
+            //Creacion de los IDs
+            controlador_id = new AgentID(controlador_name);
+            agente_mapa_id = new AgentID(agente_mapa_name);
+            vehiculo1_id = new AgentID(vehiculo1_name);
+            vehiculo2_id = new AgentID(vehiculo2_name);
+            vehiculo3_id = new AgentID(vehiculo3_name);
+            vehiculo4_id = new AgentID(vehiculo4_name);
+            
+            //Creacion de los Agentes
+            AgenteMapa agente_mapa = new AgenteMapa(agente_mapa_id, mapName, controlador_id,
+                    vehiculo1_id, vehiculo2_id, vehiculo3_id, vehiculo4_id);
+            
+            AgenteVehiculo vehiculo1 = new AgenteVehiculo(vehiculo1_id, agente_mapa_id, controlador_id);
+            AgenteVehiculo vehiculo2 = new AgenteVehiculo(vehiculo2_id, agente_mapa_id, controlador_id);
+            AgenteVehiculo vehiculo3 = new AgenteVehiculo(vehiculo3_id, agente_mapa_id, controlador_id);
+            AgenteVehiculo vehiculo4 = new AgenteVehiculo(vehiculo4_id, agente_mapa_id, controlador_id);
+            
+            //Ejecución de los Agentes
+            agente_mapa.run();
+            vehiculo1.run();
+            vehiculo2.run();
+            vehiculo3.run();
+            vehiculo4.run();
+            
         } catch (Exception ex) {
             System.out.println("Error: "+ex.getMessage());
         }
