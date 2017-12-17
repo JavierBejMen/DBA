@@ -29,7 +29,7 @@ public class pruebaClaseJSON {
         System.out.println("Prueba comando refuel: " + refuel);
         
         // Decodes
-        String e = parser.decodeErrorControlador("{\"details\":\"BAD MAP\"}");
+        String e = parser.decodeError("{\"details\":\"BAD MAP\"}");
         System.out.println("Prueba de decodificación del error: " + e);
         
         String radar = "\"sensor\":[1,1,1,0,0,1,1,0,0,0,1,0,0,0,\n" +

@@ -32,7 +32,7 @@ public class main {
         
         try {
             //Conectarse al servidor
-            AgentsConnection.connect("isg2.ugr.es",6000, controlador, "Boyero", "Parra", false);
+            AgentsConnection.connect("isg2.ugr.es", 6000, controlador_name, "Boyero", "Parra", false);
             
             //Creacion de los IDs
             controlador_id = new AgentID(controlador_name);
@@ -52,14 +52,15 @@ public class main {
             AgenteVehiculo vehiculo4 = new AgenteVehiculo(vehiculo4_id, agente_mapa_id, controlador_id);
             
             //Ejecución de los Agentes
-            agente_mapa.run();
-            vehiculo1.run();
-            vehiculo2.run();
-            vehiculo3.run();
-            vehiculo4.run();
+            agente_mapa.start();
+            vehiculo1.start();
+            vehiculo2.start();
+            vehiculo3.start();
+            vehiculo4.start();
             
+            System.out.println("llego");
         } catch (Exception ex) {
-            System.out.println("Error: "+ex.getMessage());
+            System.out.println("Error en main(): "+ex.getMessage());
         }
     }
 }

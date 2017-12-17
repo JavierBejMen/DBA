@@ -8,7 +8,6 @@ package gugelcar;
 import JSON.JSON;
 import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
-import es.upv.dsic.gti_ia.core.AgentsConnection;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 import java.util.ArrayList;
 
@@ -18,11 +17,9 @@ import java.util.ArrayList;
  */
 public class AgenteVehiculo extends SingleAgent{
     
-    private AgentID aid; //ID de este agente
     private AgentID agente_mapa_id; //ID del agente mapa
     private AgentID controlador_id; //ID del controador del servidor
     //Puede ser que necesitemos los ID de los demás agentes vehiculos, el martes lo resolvemos
-    
     
     private String conversation_id; //ID de la conversación de la sesión
     
@@ -32,13 +29,13 @@ public class AgenteVehiculo extends SingleAgent{
     private int fuelrate;
     private int range;
     private boolean fly;
+    private boolean objetivo_encontrado;
     private boolean estoy_en_objetivo;
     private Posicion serverPos; //No tengo claro si tenemos distinción entre internalPos y serverPos, el martes lo resolvemos.
     
     //Comunicacion
     private JSON jsonobj;
-    private ACLMessage outbox = null;
-    private ACLMessage inbox = null;
+
     /**
      * Define el tipo del agente según los parámetros recibidos por el servidor,
      * puede ser Car, Truck o Drone.
@@ -53,92 +50,131 @@ public class AgenteVehiculo extends SingleAgent{
             this.tipo = AgentType.Car;
     }
     
-    
-    
-    
     /**
-     * @brief Constructor
+     * Constructor
      * @author Javier Bejar Mendez
      */
     public AgenteVehiculo(AgentID aid, AgentID mapaid, AgentID controlid) throws Exception{
         super(aid);
-        this.aid = aid;
         this.agente_mapa_id = mapaid;
         this.controlador_id = controlid;
         jsonobj = new JSON();
     }
     
     /**
-     * @brief Realiza el request "checkin" para obtener la información del agente
-     * @author Javier Bejar Mendez
+     * Recibe el conversation ID y si el objetivo se ha encontrado al Agente Mapa 
+     * y los guarda en el estado interno.
+     * @author Dani
+     * 
      */
-    private void registrarse(){
-
-        outbox = new ACLMessage();
-        outbox.setSender(aid);
-        outbox.setReceiver(controlador_id);
-        outbox.setContent(jsonobj.encodeCheckin());
-        outbox.setConversationId(conversation_id);
-        outbox.setPerformative(ACLMessage.REQUEST);
-    
-        this.send(outbox);
-        try{
-            inbox = receiveACLMessage();
-        }catch(Exception ex){
-            System.out.println("Error al recivir respuesta del chek-in del controlador"+ex.getMessage());
-        }
-    
-        if(inbox.getPerformativeInt() == ACLMessage.INFORM){
-            ArrayList<Object> capabilities = jsonobj.decodeCapabilities(inbox.getContent());
-            this.fuelrate = (int)capabilities.get(0);
-            this.range = (int)capabilities.get(1);
-            this.fly = (boolean)capabilities.get(2);
-            setType();
-            
-            System.out.print("Agente "+this.aid.toString()+" Se ha suscrito con éxito con los siguientes parámetros:"
-            + "\nfuelrate: "+this.fuelrate+"\nrange: "+this.range+"\nfly: ");
-            if(fly)
-                System.out.println("true");
-            else
-                System.out.println("flase");
-            System.out.println("Se le ha asignado el tipo: "+this.tipo);
-            
-        }else{
-            System.out.println("Error: In check-in conversation, received: "+jsonobj.decodeErrorControlador(inbox.getPerformative()));
+    private void getConversationID() {
+        try {
+            ACLMessage inbox = receiveACLMessage();
+            objetivo_encontrado = jsonobj.decodeObjetivoEncontrado(inbox.getContent());
+            conversation_id = inbox.getConversationId();
+        } catch (InterruptedException ex) {
+            System.out.println("InterruptedException en getConversationID()."
+                    + " Error: " + ex.getMessage());
         }
     }
+    
     /**
-     * Notifica al agente mapa los parámetros recibidos por el controlador
+     * Crea un mensaje con los parámetros especificados.
+     * @param sender
+     * @param receiver
+     * @param performative
+     * @param content
+     * @param conv_id
+     * @param in_reply_to
+     * @return ACLMessage con los parámetros especificados
+     * @author Dani
+     */
+    private ACLMessage crearMensaje(AgentID sender, AgentID receiver, int performative,
+            String content, String conv_id, String in_reply_to){
+        
+        ACLMessage outbox = new ACLMessage(performative);
+        outbox.setSender(sender);
+        outbox.setReceiver(receiver);
+        outbox.setContent(content);
+        outbox.setConversationId(conv_id);
+        outbox.setInReplyTo(in_reply_to);
+        
+        return outbox;
+    }
+    
+    /**
+     * Realiza el request "checkin" para obtener las capabilities del agente.
+     * Cuando termina el checkin, envía la confirmación al Agente Mapa.
+     * @author Javier Bejar Mendez, Dani
+     */
+    private void checkin(){
+        ACLMessage outbox = crearMensaje(getAid(),controlador_id,ACLMessage.REQUEST,
+                    jsonobj.encodeCheckin(), conversation_id, "");
+        send(outbox);
+
+        try {
+            ACLMessage inbox = receiveACLMessage();
+            if(inbox.getPerformativeInt() == ACLMessage.INFORM){
+                ArrayList<Object> capabilities = jsonobj.decodeCapabilities(inbox.getContent());
+                fuelrate = (int)capabilities.get(0);
+                range = (int)capabilities.get(1);
+                fly = (boolean)capabilities.get(2);
+                setType();
+                
+                System.out.print("Agente "+getAid().getLocalName()+" Se ha suscrito con éxito con los siguientes parámetros:"
+                        + "\nfuelrate: "+fuelrate+"\nrange: "+range+"\nfly: "+"\ntipo: "+tipo + "\n");
+                
+                ACLMessage outbox2 = crearMensaje(getAid(),agente_mapa_id,ACLMessage.REQUEST,
+                    jsonobj.encodeConfirmacionCheckin(), "", "");
+                send(outbox2);
+                
+            } else
+                System.out.println("Fallo en checkin(). Details: "+jsonobj.decodeError(inbox.getPerformative()));
+        } catch (InterruptedException ex) {
+            System.out.println("InterruptedException en checkin(). Error: "+ex.getMessage());
+        }  
+    }
+    
+    /**
+     * Notifica al agente mapa los parámetros recibidos por el controlador.
+     * Dani: ¿Tal vez no es necesario?
      * @author Javier Bejar Mendez
      */
     private void notifyParam(){
-        outbox = new ACLMessage();
-        outbox.setSender(aid);
+        
+        ACLMessage outbox = new ACLMessage();
+        outbox.setSender(getAid());
         outbox.setReceiver(this.agente_mapa_id);
         outbox.setConversationId("notifyParam");
-        outbox.setContent(jsonobj.encondeAgentParam(this));
+        outbox.setContent(jsonobj.encodeAgentParam(this));
         outbox.setPerformative(ACLMessage.INFORM);
         
-        this.send(outbox);
+        send(outbox);
     }
     
     /**
      * @brief Comportamiento del agente
-     * @author Javier Bejar Mendez
+     * @author Javier Bejar Mendez, Dani
      */
     @Override
     public void execute(){
-        //Primero se registra y controlamos que la operación ha salido correctamente
-        registrarse();
         
-        //Luego notificamos al agente mapa el tipo de vehiculo y demas datos
-        notifyParam();
+        // Recibimos el conversation ID del Agente Mapa
+        getConversationID();
         
-        //Bucle principal
-        do{
+        // Registramos el vehículo, obtenemos sus capabilities y enviamos la confirmación
+        // al agente mapa de que nos hemos registrado.
+        checkin();
+        
+        // Luego notificamos al agente mapa acerca de nuestros datos. Dani: ¿Tal vez no es necesario
+        // que el agente Mapa sepa las capabilities de los vehículos?
+        //notifyParam();
+        
+        // Bucle principal
+        //do{
             
             
-        }while(true);
+        //} while(true);
         
         //Operaciones y notificaciones para terminar la ejecución del agente correctamente
     }
@@ -147,13 +183,13 @@ public class AgenteVehiculo extends SingleAgent{
      * @author Javier Bejar Mendez
      */
     public AgentType getTipo(){
-        return this.tipo;
+        return tipo;
     }
     /**
      * @author Javier Bejar Mendez
      */
     public int getBateria(){
-        return this.bateria;
+        return bateria;
     }
     /**
      * @author Javier Bejar Mendez

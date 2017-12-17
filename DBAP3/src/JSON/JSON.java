@@ -17,20 +17,20 @@ import org.json.JSONObject;
 import gugelcar.AgenteVehiculo;
 
 /**
- * @author Dani
- * @brief Clase encargada de obtener los atributos necesarios de un String
- * codificado en formato JSON o de codificar strings para enviar al servidor.
+ * Clase encargada de obtener los atributos necesarios de un String
+ * codificado en formato JSON o de codificar strings para enviar mensajes entre
+ * agentes.
  */
 public class JSON {
     
     public JSON(){}
     
     /**
-     * @author Dani
-     * @brief Crea el string JSON con el mundo especificado. Lo utilizamos en
+     * Crea el string JSON con el mundo especificado. Lo utilizamos en
      * el primer SUBSCRIBE.
      * @param world Mundo de la cadena JSON
      * @return string JSON con el mundo especificado
+     * @author Dani
      */
     public String encodeWorld(String world)
     {
@@ -40,24 +40,22 @@ public class JSON {
     }
     
     /**
-     * @author Dani
-     * @brief Obtiene la razón por la cual no se ha podido realizar 
-     * alguna acción con el controlador, es decir, cuando responde FAILURE,
-     * NOT_UNDERSTOOD, o REFUSE, con un JSON con el campo "details"
-     * @param json cadena JSON que devuelve el servidor al producirse un 
+     * Obtiene la razón por la cual no se ha podido realizar 
+     * alguna acción en un JSON con el campo "details"
+     * @param json cadena JSON que se devuelve al producirse un 
      * error
      * @return Razón por la cual no se ha podido realizar la acción.
+     * @author Dani
      */
-    public String decodeErrorControlador(String json){
+    public String decodeError(String json){
         JSONObject obj = new JSONObject(json);
-        String razon = (String)obj.get("details");
-        return razon;
+        return obj.getString("details");
     }
     
     /**
+     * Crea el string JSON para el checkin {"command":"checkin"}.
+     * @return string JSON para el checkin {"command":"checkin"}
      * @author Dani
-     * @brief Crea el string JSON para el checkin.
-     * @return string JSON para el checkin
      */
     public String encodeCheckin(){
         JSONObject obj = new JSONObject();
@@ -66,12 +64,37 @@ public class JSON {
     }
     
     /**
+     * Crea el string JSON para enviar si se ha
+     * encontrado el objetivo a los vehículos.
+     * @param obj_enc Booleano que acompaña al campo "objetivo_encontrado"
+     * @return String con el campo booleano "objetivo_encontrado"
      * @author Dani
-     * @brief Decodifica un string JSON con las capabilities del agente. Devuelve
+     */
+    public String encodeObjetivoEncontrado(boolean obj_enc){
+        JSONObject obj = new JSONObject();
+        obj.put("result", "OK");
+        obj.put("objetivo_encontrado", obj_enc);
+        return obj.toString();
+    }
+    
+    /**
+     * Decodifica un string JSON con el campo "objetivo_encontrado".
+     * @param json Cadena JSON con el campo "objetivo_encontrado"
+     * @return valor del campo "objetivo_encontrado"
+     * @author Dani
+     */
+    public boolean decodeObjetivoEncontrado(String json){
+        JSONObject obj = new JSONObject(json);
+        return obj.getBoolean("objetivo_encontrado");
+    }
+    
+    /**
+     * Decodifica un string JSON con las capabilities del agente. Devuelve
      * un ArrayList de objetos en este orden: 1º-fuelrate (int), 2º-range (int),
      * 3º-fly (boolean)
      * @param json cadena JSON con las capabilities
      * @return ArrayList de objetos en el orden especificado.
+     * @author Dani
      */
     public ArrayList<Object> decodeCapabilities(String json){
         JSONObject obj = new JSONObject(json);
@@ -90,6 +113,8 @@ public class JSON {
      * estructura: {AgentType tipo, int bateria, int fuelrate, int range, boolean fly}.
      * 
      * @author Javier Bejar Mendez
+     * @param paramstring
+     * @return 
      */
     public ArrayList<Object> decodeAgentParam(String paramstring){
         JSONObject obj = new JSONObject(paramstring);
@@ -109,7 +134,7 @@ public class JSON {
      * @return String en formato JSON con los parámetros del vehículo
      * @author Javier Bejar Mendez
      */
-    public String encondeAgentParam(AgenteVehiculo vehiculo){
+    public String encodeAgentParam(AgenteVehiculo vehiculo){
         JSONObject obj = new JSONObject();
         obj.put("tipo", vehiculo.getTipo());
         obj.put("bateria", vehiculo.getBateria());
@@ -121,11 +146,11 @@ public class JSON {
     }
     
     /**
-     * @author Dani
-     * @brief Obtiene una cadena codificada en JSON para moverse.
+     * Obtiene una cadena codificada en JSON para moverse.
      * @param mov Movimiento del agente (ver el enum Movimientos)
      * @see Movimientos.java
      * @return String en formato JSON con el movimiento especificado.
+     * @author Dani
      */
     public String encodeMove(Movimientos mov){
         JSONObject obj = new JSONObject();
@@ -134,9 +159,9 @@ public class JSON {
     }
     
     /**
-     * @author Dani
-     * @brief Obtiene una cadena codificada en JSON para recargar batería.
+     * Obtiene una cadena codificada en JSON para recargar batería.
      * @return String en formato JSON.
+     * @author Dani
      */
     public String encodeRefuel(){
         JSONObject obj = new JSONObject();
@@ -145,11 +170,11 @@ public class JSON {
     }
     
     /**
-     * @author Dani
-     * @brief Decodifica un string JSON con la lectura del radar y lo devuelve
+     * Decodifica un string JSON con la lectura del radar y lo devuelve
      * en un array.
      * @param json String JSON con la lectura del radar
      * @return ArrayList con los valores del radar
+     * @author Dani
      */
     public ArrayList<Integer> decodeRadar(String json){
         JSONObject obj = new JSONObject(json);
@@ -163,11 +188,11 @@ public class JSON {
     }
     
     /**
-     * @author Dani
-     * @brief Decodifica un string JSON con la lectura de la batería y 
+     * Decodifica un string JSON con la lectura de la batería y 
      * lo devuelve.
      * @param json String JSON con la lectura de la batería.
      * @return int con la lectura de la batería.
+     * @author Dani
      */
     public int decodeBattery(String json){
         JSONObject obj = new JSONObject(json);
@@ -175,11 +200,11 @@ public class JSON {
     }
     
     /**
-     * @author Dani
-     * @brief Decodifica un string JSON con la lectura del nivel global de energía y 
+     * Decodifica un string JSON con la lectura del nivel global de energía y 
      * lo devuelve.
      * @param json String JSON con la lectura del nivel global de energía.
      * @return int con el nivel global de la energía.
+     * @author Dani
      */
     public int decodeEnergy(String json){
         JSONObject obj = new JSONObject(json);
@@ -187,11 +212,11 @@ public class JSON {
     }
     
     /**
-     * @author Dani
-     * @brief Decodifica un string JSON con la lectura de si el agente está en
+     * Decodifica un string JSON con la lectura de si el agente está en
      * el objetivo.
      * @param json String JSON con la lectura de si el agente está en el objetivo.
      * @return true si está en el objetivo, false si no lo está.
+     * @author Dani
      */
     public boolean decodeGoal(String json){
         JSONObject obj = new JSONObject(json);
@@ -199,11 +224,11 @@ public class JSON {
     }
     
     /**
-     * @author Dani
-     * @brief Decodifica un string JSON con la lectura del GPS y 
+     * Decodifica un string JSON con la lectura del GPS y 
      * lo devuelve como un objeto Point
      * @param json String JSON de la lectura del GPS
      * @return Objeto Point con los valores de x e y
+     * @author Dani
      */
     public Point decodeGPS(String json){
         JSONObject obj = new JSONObject(json);
@@ -216,7 +241,7 @@ public class JSON {
     
     /**
      * @author Emilien Giard
-     * @brief Decodifica un string JSON con la command de un vehiculo
+     * Decodifica un string JSON con la command de un vehiculo
      * por el AgenteMapa y lo devuelve.
      * @param json String JSON con la command.
      * @return String de la command.
@@ -228,7 +253,7 @@ public class JSON {
 
     /**
      * @author Emilien Giard
-     * @brief Decodifica un string JSON con los percepciones de un vehiculo
+     * Decodifica un string JSON con los percepciones de un vehiculo
      * por el AgenteMapa y lo devuelve.
      * @param json String JSON con los percepciones.
      * @return matriz de los percepciones.
@@ -254,11 +279,11 @@ public class JSON {
     }
 
     /**
-     * @author Dani
-     * @brief Crea una imagen .png a partir de una traza de datos en una cadena
+     * Crea una imagen .png a partir de una traza de datos en una cadena
      * JSON.
      * @param traza Cadena JSON de la traza.
      * @param nombre_fichero Nombre del fichero creado. Recordar extension .png
+     * @author Dani
      */
     public void guardarTraza(String traza, String nombre_fichero){
 
@@ -273,11 +298,16 @@ public class JSON {
             FileOutputStream fos = new FileOutputStream(nombre_fichero);
             fos.write(data);
             fos.close();
-            System.out.println("Traza guardada");
         } catch (FileNotFoundException ex) {
             System.out.println(ex.getMessage());
         } catch (IOException ex) {
             System.out.println(ex.getMessage());
         }
+    }
+
+    public String encodeConfirmacionCheckin() {
+        JSONObject obj = new JSONObject();
+        obj.put("command", "checked-in");
+        return obj.toString();
     }
 }

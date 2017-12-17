@@ -6,9 +6,12 @@
 package gugelcar;
 
 import JSON.JSON;
+import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -16,9 +19,7 @@ import es.upv.dsic.gti_ia.core.SingleAgent;
  */
 public class AgenteMapa extends SingleAgent{
     
-    private final AgentID aid; //ID de este agente
     private final AgentID controlador_id; //ID del agente controlador del servidor
-    
     private AgentID aid1; //ID del Agente Vehiculo 1
     private AgentID aid2; //ID del Agente Vehiculo 2
     private AgentID aid3; //ID del Agente Vehiculo 3
@@ -29,11 +30,10 @@ public class AgenteMapa extends SingleAgent{
     //Atributos propios del Agente Mapa
     private Mapa map;
     private final String nameMap;
+    private boolean objetivo_encontrado;
     
     //Comunicacion
     private final JSON jsonobj;
-    private ACLMessage outbox;
-    private ACLMessage inbox;
     
     /**
      * @param aid del AgenteMapa
@@ -44,11 +44,10 @@ public class AgenteMapa extends SingleAgent{
      * @param aid3 el id del vehiculo 3
      * @param aid4 el id del vehiculo 4
      * @brief Constructor
-     * @author Javier Bejar Mendez y Emilien Giard
+     * @author Javier Bejar Mendez, Emilien Giard, Dani
      */
     public AgenteMapa(AgentID aid, String nameMap, AgentID controlador_id, AgentID aid1, AgentID aid2, AgentID aid3, AgentID aid4) throws Exception{
         super(aid);
-        this.aid = aid;
         this.aid1 = aid1;
         this.aid2 = aid2;
         this.aid3 = aid3;
@@ -56,64 +55,152 @@ public class AgenteMapa extends SingleAgent{
         this.nameMap = nameMap;
         this.controlador_id = controlador_id;
         jsonobj = new JSON();
+        
+        objetivo_encontrado = false; // TODO: Cargar de disco si hemos encontrado el 
+            // objetivo en ejecuciones anteriores
     }
     
    
     /**
-     * @brief Metodo que se suscribe y recibe el id de conversación
-     * @author Emilien Giard
+     * @brief Metodo que se suscribe y recibe y guarda el id de conversación
+     * @author Emilien Giard, Dani
      */
-    public void suscribe(){
-        String world = jsonobj.encodeWorld(this.nameMap);
-        outbox = new ACLMessage();
-        outbox.setSender(this.getAid());
-        outbox.setReceiver(this.controlador_id);
-        outbox.setContent(world);
-        outbox.setPerformative("SUBSCRIBE");
-        this.send(outbox);
+    private void subscribe(){
+        String world = jsonobj.encodeWorld(nameMap);
+        
+        ACLMessage outbox = crearMensaje(getAid(), controlador_id, 
+                ACLMessage.SUBSCRIBE, world, "", "");
+        send(outbox);
         
         try {
-            inbox = this.receiveACLMessage();
+            ACLMessage inbox = receiveACLMessage();
             if (inbox.getPerformative().equals("INFORM")) {
-                this.conversation_id = inbox.getConversationId();
+                conversation_id = inbox.getConversationId();
                 System.out.println("\nRecibido conversation id "
                 +inbox.getConversationId()+" de "+inbox.getSender().getLocalName());
             } else {
-               System.out.println("Error: In suscribe conversation, received: "+jsonobj.decodeErrorControlador(inbox.getPerformative()));
+                System.out.println("No se ha podido suscribir. Error: "+
+                   jsonobj.decodeError(inbox.getContent()));
             }
         } catch (InterruptedException ex) {
-            System.out.println("Error al recibir mensaje" + ex.getMessage());
+            System.out.println("InterruptedException en subscribe(). Error: " + ex.getMessage());
         }
     }
+    /**
+     * Envía el conversation ID a los 4 vehículos
+     * @author Dani
+     */
+    private void enviarConversationID() {
+        ACLMessage outbox = crearMensaje(getAid(), aid1, ACLMessage.INFORM,
+                jsonobj.encodeObjetivoEncontrado(objetivo_encontrado),
+                conversation_id, "");
+        send(outbox);
 
+        outbox.setReceiver(aid2);
+        send(outbox);
+
+        outbox.setReceiver(aid3);
+        send(outbox);
+
+        outbox.setReceiver(aid4);
+        send(outbox);
+    }
+    
+    /**
+     * Recibe un mensaje de confirmación de cada vehículo de que se ha hecho el
+     * checkin
+     * @author Dani
+     */
+    private void recibirConfirmacionCheckin(){
+        try {
+            ACLMessage inbox;
+            for (int i = 0; i < 4; i++){
+                inbox = receiveACLMessage();
+                System.out.println("Recibida confirmación de que el vehiculo " 
+                    + inbox.getSender().getLocalName() + 
+                    " ha hecho el checkin.\n");
+            }
+        } catch (InterruptedException ex) {
+            System.out.println("InterruptedException en enviarConversationID(). "
+                    + "Error: "+ex.getMessage());
+        }
+    }
     /**
      * @param percepciones de un vehiculo
      * @brief Metodo que actualiza la mapa en funcion de los percepciones de un vehiculo
      * @author Emilien Giard
      */
-    public void updateMap(Integer[][] percepciones) {
+    private void updateMap(Integer[][] percepciones) {
     }
 
     /**
      * @brief Metodo que envia la mapa global a un vehiculo
      * @author Emilien Giard
      */
-    public void enviarMapa() {
+    private void enviarMapa() {
     }
+    
+    /**
+     * Envía un mensaje para desloguearse del servidor. 
+     * Recibe y guarda la traza de la sesión.
+     * @author Javier Bejar Mendez, Dani
+     */
+    private void logout(){
+        
+        ACLMessage outbox = this.crearMensaje(getAid(), controlador_id,
+                ACLMessage.CANCEL, "", "", "");
+        send(outbox);
+        try {
+            ACLMessage respuesta_agree = receiveACLMessage();
+            ACLMessage respuesta_inform = receiveACLMessage();
+            System.out.println("Logout completado. Traza guardada en: "+
+                    nameMap +".png");
+            jsonobj.guardarTraza(respuesta_inform.getContent(), nameMap + ".png");
 
+        } catch (InterruptedException ex) {
+            System.out.println("InterruptedException en logOut()."
+                + " Error: " + ex.getMessage());
+        }
+    }
+    
+    /**
+     * Crea un mensaje con los parámetros especificados.
+     * @param sender
+     * @param receiver
+     * @param performative
+     * @param content
+     * @param conv_id
+     * @param in_reply_to
+     * @return ACLMessage con los parámetros especificados
+     * @author Dani
+     */
+    private ACLMessage crearMensaje(AgentID sender, AgentID receiver, int performative,
+            String content, String conv_id, String in_reply_to){
+        
+        ACLMessage outbox = new ACLMessage(performative);
+        outbox.setSender(sender);
+        outbox.setReceiver(receiver);
+        outbox.setContent(content);
+        outbox.setConversationId(conv_id);
+        outbox.setInReplyTo(in_reply_to);
+        
+        return outbox;
+    }
+    
     /**
      * Metodo que crea los vehiculos y recibe los messajes de los vehiculos
-     * @author Emilien Giard, Javier Bejar Mendez
+     * @author Emilien Giard, Javier Bejar Mendez, Dani
      */
      @Override
     public void execute(){
-        //Nos suscribimos y controlamos errores
-        logOut();
-        suscribe();
+        subscribe();
+        enviarConversationID();
+        recibirConfirmacionCheckin();
+        logout();
         
         //Difundimos el id de conversación y creamos los agentes
-        AgenteVehiculo vehiculo1, vehiculo2, vehiculo3, vehiculo4;
-        try {
+        //AgenteVehiculo vehiculo1, vehiculo2, vehiculo3, vehiculo4;
+       /* try {
             this.aid1 = new AgentID("vehiculo1");
             vehiculo1 = new AgenteVehiculo(this.aid1, this.conversation_id, this.aid, this.controlador_id);
             //vehiculo1.execute();
@@ -128,14 +215,14 @@ public class AgenteMapa extends SingleAgent{
             //vehiculo4.execute();
         } catch (Exception ex) {
             System.out.println("Error al creacion del vehiculo:" + ex.getMessage());
-        }
+        }*/
 
         //Inicializamos el mapa
         
         //bucle principal
-        do {
+        /*do {
             try {
-                inbox = this.receiveACLMessage();
+                ACLMessage inbox = this.receiveACLMessage();
                 String command = jsonobj.decodeCommandVehiculo(inbox.getContent());
                 System.out.println("\nRecibido command"
                     + command +" de "+inbox.getSender().getLocalName());
@@ -147,7 +234,7 @@ public class AgenteMapa extends SingleAgent{
                     this.enviarMapa();
                 } else if (command.equals("export-map")) {
                 } else {
-                    outbox = new ACLMessage();
+                    ACLMessage outbox = new ACLMessage();
                     outbox.setSender(this.getAid());
                     outbox.setReceiver(new AgentID(inbox.getSender().getLocalName()));
                     outbox.setPerformative("NOT-UNDERSTOOD");
@@ -157,23 +244,10 @@ public class AgenteMapa extends SingleAgent{
             } catch (InterruptedException ex) {
                 System.out.println("Error al recibir mensaje" + ex.getMessage());
             }
-        } while(true);
+        } while(true);*/
         
         //Guardamos los datos necesarios para las siguientes ejecuciones(mapa interno)
         
         //Terminamos la sesión y realizamos las comunicaciones en caso de ser necesarias con el resto de agentes
-    }
-    
-    /**
-     * Logout para desloguearse del servidor
-     * @author Javier Bejar Mendez
-     */
-    public void logOut(){
-        System.out.println("\nLOGOUT\n");
-        outbox = new ACLMessage();
-        outbox.setSender(this.getAid());
-        outbox.setReceiver(this.controlador_id);
-        outbox.setPerformative(ACLMessage.CANCEL);
-        outbox.setContent("");
     }
 }
