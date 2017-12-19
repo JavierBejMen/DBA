@@ -107,25 +107,6 @@ public class AgenteMapa extends SingleAgent{
     }
     
     /**
-     * Recibe un mensaje de confirmación de cada vehículo de que se ha hecho el
-     * checkin
-     * @author Dani
-     */
-    private void recibirConfirmacionCheckin(){
-        try {
-            ACLMessage inbox;
-            for (int i = 0; i < 4; i++){
-                inbox = receiveACLMessage();
-                System.out.println("Recibida confirmación de que el vehiculo " 
-                    + inbox.getSender().getLocalName() + 
-                    " ha hecho el checkin.\n");
-            }
-        } catch (InterruptedException ex) {
-            System.out.println("InterruptedException en enviarConversationID(). "
-                    + "Error: "+ex.getMessage());
-        }
-    }
-    /**
      * @param percepciones de un vehiculo
      * @brief Metodo que actualiza la mapa en funcion de los percepciones de un vehiculo
      * @author Emilien Giard
@@ -186,52 +167,47 @@ public class AgenteMapa extends SingleAgent{
         
         return outbox;
     }
-    
+
     /**
      * Metodo que crea los vehiculos y recibe los messajes de los vehiculos
      * @author Emilien Giard, Javier Bejar Mendez, Dani
      */
      @Override
     public void execute(){
+        int agenteCheckedIn = 0;
         subscribe();
         enviarConversationID();
-        recibirConfirmacionCheckin();
-        logout();
-        
-        //Difundimos el id de conversación y creamos los agentes
-        //AgenteVehiculo vehiculo1, vehiculo2, vehiculo3, vehiculo4;
-       /* try {
-            this.aid1 = new AgentID("vehiculo1");
-            vehiculo1 = new AgenteVehiculo(this.aid1, this.conversation_id, this.aid, this.controlador_id);
-            //vehiculo1.execute();
-
-            vehiculo2 = new AgenteVehiculo(this.aid2, this.conversation_id, this.aid, this.controlador_id);
-            //vehiculo2.execute();
-
-            vehiculo3 = new AgenteVehiculo(this.aid3, this.conversation_id, this.aid, this.controlador_id);
-            //vehiculo3.execute();
-
-            vehiculo4 = new AgenteVehiculo(this.aid4, this.conversation_id, this.aid, this.controlador_id);
-            //vehiculo4.execute();
-        } catch (Exception ex) {
-            System.out.println("Error al creacion del vehiculo:" + ex.getMessage());
-        }*/
 
         //Inicializamos el mapa
         
-        //bucle principal
-        /*do {
+        // bucle principal: espera los mesajes de los otros agentes
+        do {
+            System.out.println("agenteCheckedIn " 
+                        + agenteCheckedIn);
+            // Temporary
+            if (agenteCheckedIn == 4) {
+                logout();
+            }
             try {
                 ACLMessage inbox = this.receiveACLMessage();
                 String command = jsonobj.decodeCommandVehiculo(inbox.getContent());
-                System.out.println("\nRecibido command"
+                System.out.println("\nRecibido command "
                     + command +" de "+inbox.getSender().getLocalName());
-                if (command.equals("update-map")) {
+
+                if (command.equals("checked-in")) {
+                    System.out.println("Recibida confirmación de que el vehiculo " 
+                        + inbox.getSender().getLocalName() + 
+                        " ha hecho el checkin.\n");
+                    agenteCheckedIn ++;
+
+                } else if (command.equals("update-map")) {
                     Integer[][] percepciones = jsonobj.decodePercepciones(inbox.getContent());
+
                     // TODO: update the AgenteMapa's mapa with the perceptions
                     this.updateMap(percepciones);
                     // TODO: send the global map to the other agent and if he is in the objective
                     this.enviarMapa();
+
                 } else if (command.equals("export-map")) {
                 } else {
                     ACLMessage outbox = new ACLMessage();
@@ -244,7 +220,7 @@ public class AgenteMapa extends SingleAgent{
             } catch (InterruptedException ex) {
                 System.out.println("Error al recibir mensaje" + ex.getMessage());
             }
-        } while(true);*/
+        } while(true);
         
         //Guardamos los datos necesarios para las siguientes ejecuciones(mapa interno)
         
