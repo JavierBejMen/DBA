@@ -10,6 +10,7 @@ import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -174,6 +175,7 @@ public class AgenteMapa extends SingleAgent{
      */
      @Override
     public void execute(){
+        logout(); // Remove when agents will close the session
         int agenteCheckedIn = 0;
         subscribe();
         enviarConversationID();
@@ -182,43 +184,42 @@ public class AgenteMapa extends SingleAgent{
         
         // bucle principal: espera los mesajes de los otros agentes
         do {
-            System.out.println("agenteCheckedIn " 
-                        + agenteCheckedIn);
-            // Temporary
-            if (agenteCheckedIn == 4) {
-                logout();
-            }
             try {
                 ACLMessage inbox = this.receiveACLMessage();
                 String command = jsonobj.decodeCommandVehiculo(inbox.getContent());
-                System.out.println("\nRecibido command "
-                    + command +" de "+inbox.getSender().getLocalName());
+                //System.out.println("\nRecibido command "
+                //    + command +" de "+inbox.getSender().getLocalName()+ "content" + inbox.getContent());
+                switch (command) {
+                    case "checked-in":
+                        System.out.println("Recibida confirmación de que el vehiculo "
+                                + inbox.getSender().getLocalName() +
+                                " ha hecho el checkin.\n");
+                        agenteCheckedIn ++;
+                        break;
+                    case "update-map":
+                        int bateriaVehiculo = jsonobj.decodeBattery(inbox.getContent());
+                        Posicion posVehiculo = jsonobj.decodeGPS(inbox.getContent());
+                        ArrayList<Integer> radar = jsonobj.decodeRadar(inbox.getContent());
+                        boolean vehiculoEnObjetivo = jsonobj.decodeGoal(inbox.getContent());
 
-                if (command.equals("checked-in")) {
-                    System.out.println("Recibida confirmación de que el vehiculo " 
-                        + inbox.getSender().getLocalName() + 
-                        " ha hecho el checkin.\n");
-                    agenteCheckedIn ++;
-
-                } else if (command.equals("update-map")) {
-                    Integer[][] percepciones = jsonobj.decodePercepciones(inbox.getContent());
-
-                    // TODO: update the AgenteMapa's mapa with the perceptions
-                    this.updateMap(percepciones);
-                    // TODO: send the global map to the other agent and if he is in the objective
-                    this.enviarMapa();
-
-                } else if (command.equals("export-map")) {
-                } else {
-                    ACLMessage outbox = new ACLMessage();
-                    outbox.setSender(this.getAid());
-                    outbox.setReceiver(new AgentID(inbox.getSender().getLocalName()));
-                    outbox.setPerformative("NOT-UNDERSTOOD");
-                    outbox.setInReplyTo(inbox.getReplyWith());
-                    this.send(outbox);
+                        // TODO: update the AgenteMapa's mapa with the perceptions
+                        //this.updateMap(percepciones);
+                        // TODO: send the global map to the other agent and if he is in the objective
+                        // this.enviarMapa();
+                        break;
+                    case "export-map":
+                        break;
+                    default:
+                        ACLMessage outbox = new ACLMessage();
+                        outbox.setSender(this.getAid());
+                        outbox.setReceiver(new AgentID(inbox.getSender().getLocalName()));
+                        outbox.setPerformative("NOT-UNDERSTOOD");
+                        outbox.setInReplyTo(inbox.getReplyWith());
+                        this.send(outbox);
+                        break;
                 }
             } catch (InterruptedException ex) {
-                System.out.println("Error al recibir mensaje" + ex.getMessage());
+                System.out.println("Error al recibir mensaje");
             }
         } while(true);
         
