@@ -15,6 +15,7 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import gugelcar.AgenteVehiculo;
+import gugelcar.Posicion;
 
 /**
  * Clase encargada de obtener los atributos necesarios de un String
@@ -146,6 +147,20 @@ public class JSON {
     }
     
     /**
+     * Codifica en JSON los parámetros de un vehiculo para la command update-map
+     * @param data el misma string que el agente recibe del servidor
+     * @return String en formato JSON con las percepciones del vehiculo
+     * @author Emilien Giard
+     */
+    public String encodeUpdateMap(String data){
+        JSONObject obj = new JSONObject(data);
+        obj.put("result", obj.getJSONObject("result"));
+        obj.put("command", "update-map");
+        System.out.println("Update map to send: "+ obj.toString());
+        return obj.toString();
+    }
+
+    /**
      * Obtiene una cadena codificada en JSON para moverse.
      * @param mov Movimiento del agente (ver el enum Movimientos)
      * @see Movimientos.java
@@ -228,15 +243,15 @@ public class JSON {
      * lo devuelve como un objeto Point
      * @param json String JSON de la lectura del GPS
      * @return Objeto Point con los valores de x e y
-     * @author Dani
+     * @author Dani y Emilien
      */
-    public Point decodeGPS(String json){
+    public Posicion decodeGPS(String json){
         JSONObject obj = new JSONObject(json);
 
         int x = obj.getJSONObject("result").getInt("x");
         int y = obj.getJSONObject("result").getInt("y");
         
-        return (new Point(x,y));
+        return (new Posicion(x,y));
     }
     
     /**

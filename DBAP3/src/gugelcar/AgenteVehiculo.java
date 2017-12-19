@@ -22,6 +22,7 @@ public class AgenteVehiculo extends SingleAgent{
     //Puede ser que necesitemos los ID de los demás agentes vehiculos, el martes lo resolvemos
     
     private String conversation_id; //ID de la conversación de la sesión
+    private String replyWith;
     
     //Atributos propios de cada agente
     private AgentType tipo;
@@ -119,6 +120,7 @@ public class AgenteVehiculo extends SingleAgent{
                 fuelrate = (int)capabilities.get(0);
                 range = (int)capabilities.get(1);
                 fly = (boolean)capabilities.get(2);
+                replyWith = inbox.getReplyWith();
                 setType();
                 
                 System.out.print("Agente "+getAid().getLocalName()+" Se ha suscrito con éxito con los siguientes parámetros:"
@@ -153,6 +155,37 @@ public class AgenteVehiculo extends SingleAgent{
     }
     
     /**
+     * Realiza el request "checkin" para obtener las capabilities del agente.
+     * Cuando termina el checkin, envía la confirmación al Agente Mapa.
+     * @author Emilien
+     */
+    private void recibirDatos(){
+        ACLMessage outbox = crearMensaje(getAid(),controlador_id,ACLMessage.QUERY_REF,
+                "", conversation_id, replyWith);
+        send(outbox);
+
+        try {
+            ACLMessage inbox = receiveACLMessage();
+            System.out.println("Recibe mi percepciones: " + inbox.getContent());
+            if(inbox.getPerformativeInt() == ACLMessage.INFORM){
+                bateria = jsonobj.decodeBattery(inbox.getContent());
+                serverPos = jsonobj.decodeGPS(inbox.getContent());
+                // ArrayList<Integer> radar = jsonobj.decodeRadar(inbox.getContent());
+                estoy_en_objetivo = jsonobj.decodeGoal(inbox.getContent());
+                
+                ACLMessage outbox2 = crearMensaje(getAid(),agente_mapa_id,ACLMessage.REQUEST,
+                    jsonobj.encodeUpdateMap(inbox.getContent()), "", "");
+                send(outbox2);
+                
+            } else
+                System.out.println("Fallo en recibirDatos(). Details: " + jsonobj.decodeError(inbox.getPerformative()));
+        } catch (InterruptedException ex) {
+            System.out.println("InterruptedException en recibirDatos(). Error: "+ex.getMessage());
+        }  
+    }
+
+
+    /**
      * @brief Comportamiento del agente
      * @author Javier Bejar Mendez, Dani
      */
@@ -165,16 +198,17 @@ public class AgenteVehiculo extends SingleAgent{
         // Registramos el vehículo, obtenemos sus capabilities y enviamos la confirmación
         // al agente mapa de que nos hemos registrado.
         checkin();
+        recibirDatos();
         
         // Luego notificamos al agente mapa acerca de nuestros datos. Dani: ¿Tal vez no es necesario
         // que el agente Mapa sepa las capabilities de los vehículos?
         //notifyParam();
         
         // Bucle principal
-        //do{
+        /*do{
             
             
-        //} while(true);
+        } while(true);*/
         
         //Operaciones y notificaciones para terminar la ejecución del agente correctamente
     }
@@ -208,5 +242,18 @@ public class AgenteVehiculo extends SingleAgent{
      */
     public boolean getFly(){
         return this.fly;
+    }
+    /**
+     * @author Emilien
+     */
+    public Posicion getServerPos(){
+        return this.serverPos;
+    }
+
+    /**
+     * @author Emilien
+     */
+    public boolean getEstoyEnObjetivo(){
+        return this.estoy_en_objetivo;
     }
 }

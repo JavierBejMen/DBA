@@ -4,6 +4,8 @@
 package JSON;
 
 import gugelcar.Movimientos;
+import gugelcar.Posicion;
+import gugelcar.exceptions.ExceptionNonInitialized;
 import java.awt.Point;
 import java.util.ArrayList;
 
@@ -47,8 +49,12 @@ public class pruebaClaseJSON {
         ArrayList<Integer> array_radar = parser.decodeRadar(sensores);
         System.out.println("Prueba array del radar: " + array_radar);
 
-        Point punto = parser.decodeGPS(sensores);
-        System.out.println("Prueba punto del GPS: (x=" + punto.x + ", y=" + punto.y + ")");
+        Posicion punto = parser.decodeGPS(sensores);
+        try {
+            System.out.println("Prueba punto del GPS: (x=" + punto.getX() + ", y=" + punto.getY() + ")");
+        } catch (ExceptionNonInitialized ex) {
+            System.out.println(ex.getMessage());
+        }
         
         int bateria = parser.decodeBattery(sensores);
         System.out.println("Prueba de la bateria: " + bateria);
