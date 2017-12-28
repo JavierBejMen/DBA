@@ -119,5 +119,35 @@ public class Mapa {
         }
     }
     
+     /**
+     * Devuelve el tamaño del mapa
+     * @author Jorge
+     */
+    public Integer getTam(){
+        return this.TAM;
+    }
+    
+     /**
+     * Devuelve el mapa
+     * @author Jorge
+     */
+    public Integer getMapa(Integer i, Integer j){
+        return this.mapa[i][j];
+    }
+    
+    /**
+     * @author Jorge
+     */
+    public void setTam(Integer t){
+        this.TAM = t;
+    }
+    
+     /**
+     * @author Jorge
+     */
+    public void setMapa(Integer[][] m){
+        this.mapa = m;
+    }
+    
 }
 
