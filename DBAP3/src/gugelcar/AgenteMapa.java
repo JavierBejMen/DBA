@@ -13,6 +13,7 @@ import es.upv.dsic.gti_ia.core.SingleAgent;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONObject;
 
 /**
  *
@@ -32,6 +33,7 @@ public class AgenteMapa extends SingleAgent{
     private Mapa map;
     private final String nameMap;
     private boolean objetivo_encontrado;
+    private int iteracion;
     
     //Comunicacion
     private final JSON jsonobj;
@@ -226,5 +228,34 @@ public class AgenteMapa extends SingleAgent{
         //Guardamos los datos necesarios para las siguientes ejecuciones(mapa interno)
         
         //Terminamos la sesión y realizamos las comunicaciones en caso de ser necesarias con el resto de agentes
+    }
+    
+     /**
+     * Exporta el mapa en un archivo llamado "mapa.json"
+     * @author Jorge
+     */
+    private void exportarMapa(){
+        jsonobj.exportMapa(map, objetivo_encontrado, iteracion);
+    }
+    
+    /**
+     * Importa el mapa en un archivo llamado "mapa.json"
+     * @author Jorge
+     */
+    private JSONObject importarMapa(){
+        JSONObject obj = jsonobj.importMapa();
+        return obj;
+    }
+    
+    /**
+     * Exporta el mapa en un archivo llamado "mapa.json"
+     * @author Jorge
+     */
+    private void actualizaDatosMapa(){
+        JSONObject obj = this.importarMapa();
+        this.map.setTam((int)obj.get("tamaño"));
+        this.map.setMapa((Integer[][])obj.get("mapa"));
+        this.iteracion = (int)obj.get("iteracion");
+        this.objetivo_encontrado = (boolean)obj.get("encontrado");
     }
 }

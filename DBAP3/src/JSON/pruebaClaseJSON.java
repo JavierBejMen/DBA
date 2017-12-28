@@ -3,20 +3,36 @@
  */
 package JSON;
 
+import gugelcar.Mapa;
 import gugelcar.Movimientos;
 import gugelcar.Posicion;
+import gugelcar.exceptions.ExceptionBadParam;
 import gugelcar.exceptions.ExceptionNonInitialized;
 import java.awt.Point;
+import java.io.IOException;
 import java.util.ArrayList;
+import org.json.JSONObject;
 
 /**
  * @author Dani
  */
 public class pruebaClaseJSON {
     
-    public static void main(String[] args) {
-        JSON parser = new JSON();
+    public static void main(String[] args) throws ExceptionBadParam, IOException {
         
+        Mapa map = new Mapa(5);
+        
+        JSON parser = new JSON();
+        JSONObject obj = parser.importMapa();
+        System.out.println("Iteracion: " +obj.get("iteracion"));
+        System.out.println("Encotrado: " +obj.get("encontrado"));
+        System.out.println("Tamaño: " +obj.get("tamaño"));
+        System.out.println("Mapa: " +obj.get("mapa"));
+
+
+        parser.exportMapa(map, true, 1);
+
+       
         // Encodes
         String world = parser.encodeWorld("world1");
         System.out.println("Prueba de codificación del world: " + world);

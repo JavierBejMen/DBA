@@ -6,7 +6,6 @@ http://mvnrepository.com/artifact/org.json/json/20160810
 
 package JSON;
 import gugelcar.Movimientos;
-import java.awt.Point;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -15,7 +14,12 @@ import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import gugelcar.AgenteVehiculo;
+import gugelcar.Mapa;
 import gugelcar.Posicion;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 
 /**
  * Clase encargada de obtener los atributos necesarios de un String
@@ -319,10 +323,76 @@ public class JSON {
             System.out.println(ex.getMessage());
         }
     }
+    
+    /**
+     * Exporta el mapa explorado en la iteración n
+     * @param map mapa que vamos a exportar
+     * @param encontrado boolean que indica si el objetivo ha sido encontrado
+     * @param iteracion número de la iteración en la que nos encontramos
 
-    public String encodeConfirmacionCheckin() {
-        JSONObject obj = new JSONObject();
-        obj.put("command", "checked-in");
-        return obj.toString();
+     * @author Jorge,Dani
+     */
+    public void exportMapa(Mapa map, boolean encontrado, int iteracion){
+            JSONObject obj = new JSONObject();
+            try{
+            obj.put("iteracion", iteracion);
+            obj.put("encontrado", encontrado);
+            obj.put("tamaño", map.getTam());
+            
+            int tamaño = map.getTam();
+            ArrayList<Object> mapa = new ArrayList();
+            for(int i=0; i < tamaño; i++){
+                for(int j = 0; j < tamaño; j++){
+                    mapa.add(map.getMapa(i, j));
+                }
+            }
+            
+            obj.put("mapa",mapa);
+                File archivo = new File("mapa.json");
+                FileWriter escribir=new FileWriter(archivo,false); 
+                escribir.write(obj.toString());
+                escribir.close();
+                }
+
+            //Si existe un problema al escribir cae aqui
+            catch(Exception e)
+            {
+            System.out.println("Error al exportar el mapa");
+            }
+        }
+
+        
+    /**
+     * importa el mapa explorado en la iteración n
+     * @return JSONObject con el contenido de la iteración anterior
+     * @author Jorge,Dani
+     */
+    public JSONObject importMapa(){
+        JSONObject obj = null;
+        try{
+        String cadena;
+        File archivo = new File("mapa.json");
+        FileReader f = new FileReader(archivo);
+        BufferedReader b = new BufferedReader(f);
+        String aux = "";
+        while((cadena = b.readLine())!=null) {
+            aux = cadena;
+        }
+        b.close();
+
+        obj = new JSONObject(aux);
+
+        }catch(Exception e)
+        {
+        System.out.println("Error al importar el mapa");
+        }
+        return obj;
+        
     }
-}
+    
+        public String encodeConfirmacionCheckin() {
+            JSONObject obj = new JSONObject();
+            obj.put("command", "checked-in");
+            return obj.toString();
+        }
+    }
