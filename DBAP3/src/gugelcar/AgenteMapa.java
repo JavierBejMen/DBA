@@ -10,6 +10,8 @@ import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
+import gugelcar.exceptions.ExceptionBadParam;
+import gugelcar.exceptions.ExceptionNonInitialized;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -34,6 +36,7 @@ public class AgenteMapa extends SingleAgent{
     private final String nameMap;
     private boolean objetivo_encontrado;
     private int iteracion;
+    private int bateriaGlobal;
     
     //Comunicacion
     private final JSON jsonobj;
@@ -47,9 +50,9 @@ public class AgenteMapa extends SingleAgent{
      * @param aid3 el id del vehiculo 3
      * @param aid4 el id del vehiculo 4
      * @brief Constructor
-     * @author Javier Bejar Mendez, Emilien Giard, Dani
+     * @author Javier Bejar Mendez, Emilien Giard, Dani, Jorge
      */
-    public AgenteMapa(AgentID aid, String nameMap, AgentID controlador_id, AgentID aid1, AgentID aid2, AgentID aid3, AgentID aid4) throws Exception{
+    public AgenteMapa(AgentID aid, String nameMap, AgentID controlador_id, AgentID aid1, AgentID aid2, AgentID aid3, AgentID aid4, int bateriaGlobal) throws Exception{
         super(aid);
         this.aid1 = aid1;
         this.aid2 = aid2;
@@ -57,6 +60,7 @@ public class AgenteMapa extends SingleAgent{
         this.aid4 = aid4;
         this.nameMap = nameMap;
         this.controlador_id = controlador_id;
+        this.bateriaGlobal = bateriaGlobal;
         jsonobj = new JSON();
         
         objetivo_encontrado = false; // TODO: Cargar de disco si hemos encontrado el 
@@ -112,16 +116,169 @@ public class AgenteMapa extends SingleAgent{
     /**
      * @param percepciones de un vehiculo
      * @brief Metodo que actualiza la mapa en funcion de los percepciones de un vehiculo
-     * @author Emilien Giard
+     * @author Emilien Giard, Jorge
      */
-    private void updateMap(Integer[][] percepciones) {
+    private void updateMap(Integer[][] percepciones, Posicion posicion, AgentType a) throws ExceptionNonInitialized, ExceptionBadParam {
+        String agente = a.toString();
+        Posicion aux = posicion;
+        
+        switch (agente){
+            case "Car":
+                
+                aux.setX(posicion.getX() - 1);
+                aux.setY(posicion.getY() - 1);
+                for(int i = 0; i < 3; i++){
+                    this.map.set(aux, percepciones[0][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                
+                aux.setX(posicion.getX());
+                aux.setY(posicion.getY()-1);
+                for(int i = 0; i < 3; i++){
+                    this.map.set(aux, percepciones[1][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                
+                aux.setX(posicion.getX() + 1);
+                aux.setY(posicion.getY() - 1);
+                for(int i = 0; i < 3; i++){
+                    this.map.set(aux, percepciones[2][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                
+                break;
+            case "Drone":
+                
+                aux.setX(posicion.getX() - 2);
+                aux.setY(posicion.getY() - 2);
+                for(int i = 0; i < 5; i++){
+                    this.map.set(aux, percepciones[0][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                
+                aux.setX(posicion.getX()-1);
+                aux.setY(posicion.getY()-2);
+                for(int i = 0; i < 5; i++){
+                    this.map.set(aux, percepciones[1][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                
+                aux.setX(posicion.getX());
+                aux.setY(posicion.getY() - 2);
+                for(int i = 0; i < 5; i++){
+                    this.map.set(aux, percepciones[2][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                
+                aux.setX(posicion.getX() + 1);
+                aux.setY(posicion.getY() - 2);
+                for(int i = 0; i < 5; i++){
+                    this.map.set(aux, percepciones[3][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                
+                aux.setX(posicion.getX() + 2);
+                aux.setY(posicion.getY() - 2);
+                for(int i = 0; i < 5; i++){
+                    this.map.set(aux, percepciones[4][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                break;
+            case "Truck":
+                
+                aux.setX(posicion.getX() - 5);
+                aux.setY(posicion.getY() - 5);
+                for(int i = 0; i < 11; i++){
+                    this.map.set(aux, percepciones[0][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                
+                aux.setX(posicion.getX()-4);
+                aux.setY(posicion.getY()-5);
+                for(int i = 0; i < 11; i++){
+                    this.map.set(aux, percepciones[1][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                
+                aux.setX(posicion.getX() - 3);
+                aux.setY(posicion.getY() - 5);
+                for(int i = 0; i < 11; i++){
+                    this.map.set(aux, percepciones[2][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                
+                aux.setX(posicion.getX() - 2);
+                aux.setY(posicion.getY() - 5);
+                for(int i = 0; i < 11; i++){
+                    this.map.set(aux, percepciones[3][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                
+                aux.setX(posicion.getX() - 1);
+                aux.setY(posicion.getY() - 5);
+                for(int i = 0; i < 11; i++){
+                    this.map.set(aux, percepciones[4][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                
+                aux.setX(posicion.getX());
+                aux.setY(posicion.getY() - 5);
+                for(int i = 0; i < 11; i++){
+                    this.map.set(aux, percepciones[5][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                
+                aux.setX(posicion.getX() +1);
+                aux.setY(posicion.getY() -5);
+                for(int i = 0; i < 11; i++){
+                    this.map.set(aux, percepciones[6][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                
+                aux.setX(posicion.getX() + 2);
+                aux.setY(posicion.getY() - 5);
+                for(int i = 0; i < 11; i++){
+                    this.map.set(aux, percepciones[7][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                
+                aux.setX(posicion.getX() + 3);
+                aux.setY(posicion.getY() - 5);
+                for(int i = 0; i < 11; i++){
+                    this.map.set(aux, percepciones[8][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                
+                aux.setX(posicion.getX() + 4);
+                aux.setY(posicion.getY() - 5);
+                for(int i = 0; i < 11; i++){
+                    this.map.set(aux, percepciones[9][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                
+                aux.setX(posicion.getX() + 5);
+                aux.setY(posicion.getY() - 5);
+                for(int i = 0; i < 11; i++){
+                    this.map.set(aux, percepciones[10][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                
+                aux.setX(posicion.getX() + 2);
+                aux.setY(posicion.getY() - 2);
+                for(int i = 0; i < 11; i++){
+                    this.map.set(aux, percepciones[11][i]);
+                    aux.setY(aux.getY()+1);
+                }
+                break;
+        }
     }
 
     /**
-     * @brief Metodo que envia la mapa global a un vehiculo
-     * @author Emilien Giard
+     * @brief Metodo que envia el mapa global a un vehiculo
+     * @author Emilien Giard, Jorge
      */
-    private void enviarMapa() {
+    private Mapa enviarMapa() {
+        return map;
     }
     
     /**
@@ -173,7 +330,7 @@ public class AgenteMapa extends SingleAgent{
 
     /**
      * Metodo que crea los vehiculos y recibe los messajes de los vehiculos
-     * @author Emilien Giard, Javier Bejar Mendez, Dani
+     * @author Emilien Giard, Javier Bejar Mendez, Dani, Jorge
      */
      @Override
     public void execute(){
@@ -210,6 +367,7 @@ public class AgenteMapa extends SingleAgent{
                         // this.enviarMapa();
                         break;
                     case "export-map":
+                        this.exportarMapa();
                         break;
                     default:
                         ACLMessage outbox = new ACLMessage();
@@ -251,7 +409,7 @@ public class AgenteMapa extends SingleAgent{
      * Exporta el mapa en un archivo llamado "mapa.json"
      * @author Jorge
      */
-    private void actualizaDatosMapa(){
+    private void actualizaDatosMapaImportado(){
         JSONObject obj = this.importarMapa();
         this.map.setTam((int)obj.get("tamaño"));
         this.map.setMapa((Integer[][])obj.get("mapa"));

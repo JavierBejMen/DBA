@@ -13,8 +13,11 @@ import gugelcar.exceptions.*;
 public class Mapa {
     private Integer[][] mapa;
     private Integer TAM;
-    
-    //Constructor
+
+    /**
+    * @brief Constructor, inicializa cada casilla del mapa a -1
+    * @author Javier Bejar Mendez
+    */
     public Mapa(Integer tam) throws ExceptionBadParam{
         if(tam < 0){
             throw new ExceptionBadParam("Error al construir mapa, parametro menores que 0");
@@ -23,7 +26,7 @@ public class Mapa {
         this.mapa = new Integer[TAM][TAM];
         for(int i = 0; i < tam; ++i){
             for(int j = 0; j < tam; ++j){
-                this.mapa[i][j] = 0;
+                this.mapa[i][j] = -1;
             }
         }
         

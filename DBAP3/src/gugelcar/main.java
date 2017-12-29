@@ -42,6 +42,7 @@ public class main {
             vehiculo3_id = new AgentID(vehiculo3_name);
             vehiculo4_id = new AgentID(vehiculo4_name);
             
+            //Da error ya que hay que añadir la batería global.
             //Creacion de los Agentes
             AgenteMapa agente_mapa = new AgenteMapa(agente_mapa_id, mapName, controlador_id,
                     vehiculo1_id, vehiculo2_id, vehiculo3_id, vehiculo4_id);

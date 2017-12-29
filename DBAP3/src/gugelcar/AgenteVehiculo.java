@@ -256,4 +256,16 @@ public class AgenteVehiculo extends SingleAgent{
     public boolean getEstoyEnObjetivo(){
         return this.estoy_en_objetivo;
     }
+    
+    /**
+     * @brief Devuelve true si tiene batería para moverse, false en caso contrario
+     * @author Jorge
+     */
+    public boolean puedoMoverme(){
+        if(this.bateria > this.fuelrate)
+            return true;
+        else return false;
+    }
+    
+    
 }
