@@ -10,7 +10,7 @@ import java.util.Scanner;
 
 /**
  *
- * @author Daniel Díaz Pareja
+ * @author Dani
  */
 public class Agent extends SingleAgent {
     private final AgentID shenron = new AgentID("Shenron");
@@ -21,6 +21,9 @@ public class Agent extends SingleAgent {
         super(aid);
     }
     
+    /**
+     * @author Dani
+     */
     @Override
     public void execute(){
         int opcion;
@@ -47,6 +50,9 @@ public class Agent extends SingleAgent {
         }
     }
     
+    /**
+     * @author Dani
+     */
     private void reiniciarServidor(){
         String content = "{\"user\":\""+user+"\",\"password\":\""+pass+"\"}";
         ACLMessage outbox = crearMensaje(this.getAid(), shenron, ACLMessage.REQUEST,
@@ -67,6 +73,9 @@ public class Agent extends SingleAgent {
         }
     }
     
+    /**
+     * @author Dani
+     */
     private void consultarUltimoRegistro(){
         String content = "{\"user\":\""+user+"\",\"password\":\""+pass+"\"}";
         ACLMessage outbox = crearMensaje(this.getAid(), shenron, ACLMessage.QUERY_REF,
