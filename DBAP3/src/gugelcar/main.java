@@ -59,7 +59,6 @@ public class main {
             vehiculo3.start();
             vehiculo4.start();
             
-            System.out.println("llego");
         } catch (Exception ex) {
             System.out.println("Error en main(): "+ex.getMessage());
         }

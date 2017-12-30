@@ -6,15 +6,12 @@
 package gugelcar;
 
 import JSON.JSON;
-import edu.emory.mathcs.backport.java.util.concurrent.TimeUnit;
 import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 import gugelcar.exceptions.ExceptionBadParam;
 import gugelcar.exceptions.ExceptionNonInitialized;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.json.JSONObject;
 
 /**
@@ -52,7 +49,7 @@ public class AgenteMapa extends SingleAgent{
      * @brief Constructor
      * @author Javier Bejar Mendez, Emilien Giard, Dani, Jorge
      */
-    public AgenteMapa(AgentID aid, String nameMap, AgentID controlador_id, AgentID aid1, AgentID aid2, AgentID aid3, AgentID aid4, int bateriaGlobal) throws Exception{
+    public AgenteMapa(AgentID aid, String nameMap, AgentID controlador_id, AgentID aid1, AgentID aid2, AgentID aid3, AgentID aid4) throws Exception{
         super(aid);
         this.aid1 = aid1;
         this.aid2 = aid2;
@@ -60,7 +57,6 @@ public class AgenteMapa extends SingleAgent{
         this.aid4 = aid4;
         this.nameMap = nameMap;
         this.controlador_id = controlador_id;
-        this.bateriaGlobal = bateriaGlobal;
         jsonobj = new JSON();
         
         objetivo_encontrado = false; // TODO: Cargar de disco si hemos encontrado el 
@@ -115,7 +111,7 @@ public class AgenteMapa extends SingleAgent{
     
     /**
      * @param percepciones de un vehiculo
-     * @brief Metodo que actualiza la mapa en funcion de los percepciones de un vehiculo
+     * @brief Metodo que actualiza el mapa en funcion de las percepciones de un vehiculo
      * @author Emilien Giard, Jorge
      */
     private void updateMap(Integer[][] percepciones, Posicion posicion, AgentType a) throws ExceptionNonInitialized, ExceptionBadParam {

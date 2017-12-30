@@ -139,7 +139,6 @@ public class AgenteVehiculo extends SingleAgent{
     
     /**
      * Notifica al agente mapa los parámetros recibidos por el controlador.
-     * Dani: ¿Tal vez no es necesario?
      * @author Javier Bejar Mendez
      */
     private void notifyParam(){
