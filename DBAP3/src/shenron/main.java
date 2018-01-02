@@ -14,7 +14,7 @@ public class main {
         
         try {
             AgentsConnection.connect("isg2.ugr.es", 6000, "test", "Boyero", "Parra", false);
-            Agent agente = new Agent(new AgentID("Grupo3"));
+            Agent agente = new Agent(new AgentID("ShenronGrupo3"));
             agente.start();
         } catch (Exception ex) {
             System.out.println("Excepción en main. Mensaje: "+ ex.getMessage());

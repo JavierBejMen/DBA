@@ -29,38 +29,38 @@ public class Posicion {
     }
     
     //Devuelve la accion para ir desde ESTA posicion a OTRO
-    public Movimientos getMove(Posicion otro){
+    public Movimiento getMove(Posicion otro){
         Cardinal card= new Cardinal(this.getCardinal(otro));
-        Movimientos move = null;
+        Movimiento move = null;
         try{
             switch(card.get()){
                 case "n":
-            move = Movimientos.moveN;
-            break;
-        case "s"  :
-            move = Movimientos.moveS;
-            break;
-        case "o":
-            move = Movimientos.moveW;
-            break;
-        case "e":
-            move = Movimientos.moveE;
-            break;
-        case "no":
-            move = Movimientos.moveNW;
-            break;
-        case "ne":
-            move = Movimientos.moveNE;
-            break;
-        case "so"  :
-            move = Movimientos.moveSW;
-            break;
-        case "se"  :
-            move = Movimientos.moveSE;
-            break;
-        default:
-            System.out.println("Algo fue mal al obtener el movimiento");
-            }
+                    move = Movimiento.moveS;
+                    break;
+                case "s"  :
+                    move = Movimiento.moveN;
+                    break;
+                case "o":
+                    move = Movimiento.moveE;
+                    break;
+                case "e":
+                    move = Movimiento.moveW;
+                    break;
+                case "no":
+                    move = Movimiento.moveSE;
+                    break;
+                case "ne":
+                    move = Movimiento.moveSW;
+                    break;
+                case "so"  :
+                    move = Movimiento.moveNE;
+                    break;
+                case "se"  :
+                    move = Movimiento.moveNW;
+                    break;
+                default:
+                    System.out.println("Algo fue mal al obtener el movimiento");
+                    }
         }catch(ExceptionNonInitialized ex){
             System.out.println("Error al calcular movimiento: "+ex.getMessage());
         }
@@ -70,17 +70,17 @@ public class Posicion {
     public Cardinal getCardinal(Posicion otro){
         
         String cardinal="";
-        if(this.y < otro.y){
+        if(this.y < otro.y)
             cardinal += "n";
-        }else if(this.y > otro.y){
+        else if(this.y > otro.y)
             cardinal += "s";
-        }
+        
     
-        if(this.x < otro.x){
+        if(this.x < otro.x)
             cardinal += "o";
-        }else if(this.x > otro.x){
+        else if(this.x > otro.x)
             cardinal += "e";
-        }
+        
         Cardinal card = new Cardinal();
         try{
             card.set(cardinal);

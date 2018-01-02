@@ -7,6 +7,7 @@ package gugelcar;
 
 import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.AgentsConnection;
+import java.util.ArrayList;
 /**
  *
  * @author Daniel
@@ -20,15 +21,16 @@ public class main {
     public static void main(String[] args) {
 
         String controlador_name = "Cerastes";
-        String agente_mapa_name = "AgenteMapa";
-        String vehiculo1_name = "vehiculo1";
-        String vehiculo2_name = "vehiculo2";
-        String vehiculo3_name = "vehiculo3";
-        String vehiculo4_name = "vehiculo4";
+        String agente_mapa_name = "burocrata";
+        String vehiculo1_name = "1";
+        String vehiculo2_name = "2";
+        String vehiculo3_name = "3";
+        String vehiculo4_name = "4";
         
         String mapName = "map1";
         
-        AgentID controlador_id, agente_mapa_id, vehiculo1_id, vehiculo2_id, vehiculo3_id, vehiculo4_id;
+        AgentID controlador_id, agente_mapa_id;
+        ArrayList<AgentID> vehiculos = new ArrayList();
         
         try {
             //Conectarse al servidor
@@ -37,20 +39,20 @@ public class main {
             //Creacion de los IDs
             controlador_id = new AgentID(controlador_name);
             agente_mapa_id = new AgentID(agente_mapa_name);
-            vehiculo1_id = new AgentID(vehiculo1_name);
-            vehiculo2_id = new AgentID(vehiculo2_name);
-            vehiculo3_id = new AgentID(vehiculo3_name);
-            vehiculo4_id = new AgentID(vehiculo4_name);
+            vehiculos.add(new AgentID(vehiculo1_name));
+            vehiculos.add(new AgentID(vehiculo2_name));
+            vehiculos.add(new AgentID(vehiculo3_name));
+            vehiculos.add(new AgentID(vehiculo4_name));
             
             //Da error ya que hay que añadir la batería global.
             //Creacion de los Agentes
             AgenteMapa agente_mapa = new AgenteMapa(agente_mapa_id, mapName, controlador_id,
-                    vehiculo1_id, vehiculo2_id, vehiculo3_id, vehiculo4_id);
+                    vehiculos);
             
-            AgenteVehiculo vehiculo1 = new AgenteVehiculo(vehiculo1_id, agente_mapa_id, controlador_id);
-            AgenteVehiculo vehiculo2 = new AgenteVehiculo(vehiculo2_id, agente_mapa_id, controlador_id);
-            AgenteVehiculo vehiculo3 = new AgenteVehiculo(vehiculo3_id, agente_mapa_id, controlador_id);
-            AgenteVehiculo vehiculo4 = new AgenteVehiculo(vehiculo4_id, agente_mapa_id, controlador_id);
+            AgenteVehiculo vehiculo1 = new AgenteVehiculo(vehiculos.get(0), agente_mapa_id, controlador_id);
+            AgenteVehiculo vehiculo2 = new AgenteVehiculo(vehiculos.get(1), agente_mapa_id, controlador_id);
+            AgenteVehiculo vehiculo3 = new AgenteVehiculo(vehiculos.get(2), agente_mapa_id, controlador_id);
+            AgenteVehiculo vehiculo4 = new AgenteVehiculo(vehiculos.get(3), agente_mapa_id, controlador_id);
             
             //Ejecución de los Agentes
             agente_mapa.start();
@@ -60,7 +62,7 @@ public class main {
             vehiculo4.start();
             
         } catch (Exception ex) {
-            System.out.println("Error en main(): "+ex.getMessage());
+            System.out.println("Excepción en main(): "+ex.getMessage());
         }
     }
 }

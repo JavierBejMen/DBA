@@ -15,7 +15,7 @@ public class Mapa {
     private Integer TAM;
 
     /**
-    * @brief Constructor, inicializa cada casilla del mapa a -1
+    * Constructor, inicializa cada casilla del mapa a -1
     * @author Javier Bejar Mendez
     */
     public Mapa(Integer tam) throws ExceptionBadParam{
@@ -32,7 +32,7 @@ public class Mapa {
         
     }
     
-    //Obtiene la posicion asociada a un vector relativa al parámetro pos
+    // Obtiene la posicion asociada a un vector relativa al parámetro pos
     public Posicion getFromVector(Posicion pos, Integer xy, Integer n){
         Integer x = null;
         Integer y = null;
@@ -68,14 +68,15 @@ public class Mapa {
             System.out.println("Error, se ha pasado como parámetro a mapa: "+ex.getMessage());
         }
         
-        return this.mapa[x][y];
+        return this.mapa[y][x];
     }
+    
     public Integer get(Integer x, Integer y) throws ExceptionBadParam{
         if(x >= this.TAM || y >= this.TAM || x < 0 || y < 0){
             throw new ExceptionBadParam("Error al acceder al mapa, parámetros fuera de rango");
         }
         
-        return this.mapa[x][y];
+        return this.mapa[y][x];
     }
     public void set(Posicion pos, Integer value) throws ExceptionBadParam{
         Integer x = null;
@@ -90,7 +91,7 @@ public class Mapa {
         if(x >= this.TAM || y >= this.TAM || x < 0 || y < 0){
             throw new ExceptionBadParam("Error al modificar el mapa, parámetros fuera de rango");
         }
-        this.mapa[x][y] = value;
+        this.mapa[y][x] = value;
     }
     
     //Imprime el mapa por consola
@@ -130,14 +131,6 @@ public class Mapa {
         return this.TAM;
     }
     
-     /**
-     * Devuelve el mapa
-     * @author Jorge
-     */
-    public Integer getMapa(Integer i, Integer j){
-        return this.mapa[i][j];
-    }
-    
     /**
      * @author Jorge
      */
@@ -152,5 +145,8 @@ public class Mapa {
         this.mapa = m;
     }
     
+    public Integer[][] mapToMatrix(){
+        return this.mapa;
+    }
 }
 

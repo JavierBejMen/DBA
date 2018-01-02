@@ -11,29 +11,25 @@ import es.upv.dsic.gti_ia.core.AgentID;
 import es.upv.dsic.gti_ia.core.SingleAgent;
 import gugelcar.exceptions.ExceptionBadParam;
 import gugelcar.exceptions.ExceptionNonInitialized;
+import static java.lang.Math.sqrt;
 import java.util.ArrayList;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
-/**
- *
- * @author Javier Bejar Mendez,Emilien Giard
- */
 public class AgenteMapa extends SingleAgent{
     
     private final AgentID controlador_id; //ID del agente controlador del servidor
-    private AgentID aid1; //ID del Agente Vehiculo 1
-    private AgentID aid2; //ID del Agente Vehiculo 2
-    private AgentID aid3; //ID del Agente Vehiculo 3
-    private AgentID aid4; //ID del Agente Vehiculo 4
+    private ArrayList<AgentID> vehiculos; // IDs de los vehiculos
     
     private String conversation_id; //ID de la conversación de la sesión actual
     
     //Atributos propios del Agente Mapa
-    private Mapa map;
+    private Mapa mapa;
     private final String nameMap;
     private boolean objetivo_encontrado;
     private int iteracion;
-    private int bateriaGlobal;
+    private int energy; // Batería global
+    private final int tam_mapa = 111;
     
     //Comunicacion
     private final JSON jsonobj;
@@ -42,30 +38,24 @@ public class AgenteMapa extends SingleAgent{
      * @param aid del AgenteMapa
      * @param nameMap el nombre de la mapa
      * @param controlador_id el id del servidor
-     * @param aid1 el id del vehiculo 1
-     * @param aid2 el id del vehiculo 2
-     * @param aid3 el id del vehiculo 3
-     * @param aid4 el id del vehiculo 4
-     * @brief Constructor
+     * @param aids vector de agentes, deben ser 4
+     * Constructor
      * @author Javier Bejar Mendez, Emilien Giard, Dani, Jorge
+     * @throws java.lang.Exception
      */
-    public AgenteMapa(AgentID aid, String nameMap, AgentID controlador_id, AgentID aid1, AgentID aid2, AgentID aid3, AgentID aid4) throws Exception{
+    public AgenteMapa(AgentID aid, String nameMap, AgentID controlador_id, 
+            ArrayList<AgentID> aids) throws Exception{
         super(aid);
-        this.aid1 = aid1;
-        this.aid2 = aid2;
-        this.aid3 = aid3;
-        this.aid4 = aid4;
+        this.vehiculos = aids;
         this.nameMap = nameMap;
         this.controlador_id = controlador_id;
         jsonobj = new JSON();
-        
-        objetivo_encontrado = false; // TODO: Cargar de disco si hemos encontrado el 
-            // objetivo en ejecuciones anteriores
+        this.actualizaDatosMapaImportado();
     }
     
    
     /**
-     * @brief Metodo que se suscribe y recibe y guarda el id de conversación
+     * Metodo que se suscribe y recibe y guarda el id de conversación
      * @author Emilien Giard, Dani
      */
     private void subscribe(){
@@ -90,191 +80,56 @@ public class AgenteMapa extends SingleAgent{
         }
     }
     /**
-     * Envía el conversation ID a los 4 vehículos
+     * Envía el conversation ID, el mapa y si se ha encontrado el objetivo a los 4 vehículos
      * @author Dani
      */
-    private void enviarConversationID() {
-        ACLMessage outbox = crearMensaje(getAid(), aid1, ACLMessage.INFORM,
-                jsonobj.encodeObjetivoEncontrado(objetivo_encontrado),
-                conversation_id, "");
-        send(outbox);
-
-        outbox.setReceiver(aid2);
-        send(outbox);
-
-        outbox.setReceiver(aid3);
-        send(outbox);
-
-        outbox.setReceiver(aid4);
-        send(outbox);
+    private void enviarEstadoInicial() {
+        for (AgentID vehiculo : vehiculos)
+            this.enviarMapa(vehiculo);
     }
     
     /**
-     * @param percepciones de un vehiculo
-     * @brief Metodo que actualiza el mapa en funcion de las percepciones de un vehiculo
-     * @author Emilien Giard, Jorge
+     * Metodo que actualiza el mapa en funcion de las percepciones de un vehiculo
+     * @param vision visión actual del vehículo
+     * @param pos posicion en el mapa global del vehículo
+     * @param obj_enc si se ha encontrado el objetivo
+     * @author Emilien Giard, Jorge, Dani
      */
-    private void updateMap(Integer[][] percepciones, Posicion posicion, AgentType a) throws ExceptionNonInitialized, ExceptionBadParam {
-        String agente = a.toString();
-        Posicion aux = posicion;
-        
-        switch (agente){
-            case "Car":
-                
-                aux.setX(posicion.getX() - 1);
-                aux.setY(posicion.getY() - 1);
-                for(int i = 0; i < 3; i++){
-                    this.map.set(aux, percepciones[0][i]);
-                    aux.setY(aux.getY()+1);
+    private void updateMap(JSONArray vision, Posicion pos, boolean obj_enc) {
+        objetivo_encontrado = obj_enc;
+        int dist;
+        if (vision.length() == 9)
+            dist = 1;
+        else if (vision.length() == 25)
+            dist = 2;
+        else
+            dist = 5;
+        try {
+            Posicion nueva = new Posicion(pos.getX()-dist,pos.getY()-dist);
+            int range = (int)sqrt(vision.length());
+            for (int fil = 0; fil < range; fil++){
+                for (int col = 0; col < range; col++){
+                    mapa.set(nueva, vision.getInt(fil*range+col));
+                    nueva.setX(nueva.getX()+1);
                 }
-                
-                aux.setX(posicion.getX());
-                aux.setY(posicion.getY()-1);
-                for(int i = 0; i < 3; i++){
-                    this.map.set(aux, percepciones[1][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                
-                aux.setX(posicion.getX() + 1);
-                aux.setY(posicion.getY() - 1);
-                for(int i = 0; i < 3; i++){
-                    this.map.set(aux, percepciones[2][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                
-                break;
-            case "Drone":
-                
-                aux.setX(posicion.getX() - 2);
-                aux.setY(posicion.getY() - 2);
-                for(int i = 0; i < 5; i++){
-                    this.map.set(aux, percepciones[0][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                
-                aux.setX(posicion.getX()-1);
-                aux.setY(posicion.getY()-2);
-                for(int i = 0; i < 5; i++){
-                    this.map.set(aux, percepciones[1][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                
-                aux.setX(posicion.getX());
-                aux.setY(posicion.getY() - 2);
-                for(int i = 0; i < 5; i++){
-                    this.map.set(aux, percepciones[2][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                
-                aux.setX(posicion.getX() + 1);
-                aux.setY(posicion.getY() - 2);
-                for(int i = 0; i < 5; i++){
-                    this.map.set(aux, percepciones[3][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                
-                aux.setX(posicion.getX() + 2);
-                aux.setY(posicion.getY() - 2);
-                for(int i = 0; i < 5; i++){
-                    this.map.set(aux, percepciones[4][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                break;
-            case "Truck":
-                
-                aux.setX(posicion.getX() - 5);
-                aux.setY(posicion.getY() - 5);
-                for(int i = 0; i < 11; i++){
-                    this.map.set(aux, percepciones[0][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                
-                aux.setX(posicion.getX()-4);
-                aux.setY(posicion.getY()-5);
-                for(int i = 0; i < 11; i++){
-                    this.map.set(aux, percepciones[1][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                
-                aux.setX(posicion.getX() - 3);
-                aux.setY(posicion.getY() - 5);
-                for(int i = 0; i < 11; i++){
-                    this.map.set(aux, percepciones[2][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                
-                aux.setX(posicion.getX() - 2);
-                aux.setY(posicion.getY() - 5);
-                for(int i = 0; i < 11; i++){
-                    this.map.set(aux, percepciones[3][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                
-                aux.setX(posicion.getX() - 1);
-                aux.setY(posicion.getY() - 5);
-                for(int i = 0; i < 11; i++){
-                    this.map.set(aux, percepciones[4][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                
-                aux.setX(posicion.getX());
-                aux.setY(posicion.getY() - 5);
-                for(int i = 0; i < 11; i++){
-                    this.map.set(aux, percepciones[5][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                
-                aux.setX(posicion.getX() +1);
-                aux.setY(posicion.getY() -5);
-                for(int i = 0; i < 11; i++){
-                    this.map.set(aux, percepciones[6][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                
-                aux.setX(posicion.getX() + 2);
-                aux.setY(posicion.getY() - 5);
-                for(int i = 0; i < 11; i++){
-                    this.map.set(aux, percepciones[7][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                
-                aux.setX(posicion.getX() + 3);
-                aux.setY(posicion.getY() - 5);
-                for(int i = 0; i < 11; i++){
-                    this.map.set(aux, percepciones[8][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                
-                aux.setX(posicion.getX() + 4);
-                aux.setY(posicion.getY() - 5);
-                for(int i = 0; i < 11; i++){
-                    this.map.set(aux, percepciones[9][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                
-                aux.setX(posicion.getX() + 5);
-                aux.setY(posicion.getY() - 5);
-                for(int i = 0; i < 11; i++){
-                    this.map.set(aux, percepciones[10][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                
-                aux.setX(posicion.getX() + 2);
-                aux.setY(posicion.getY() - 2);
-                for(int i = 0; i < 11; i++){
-                    this.map.set(aux, percepciones[11][i]);
-                    aux.setY(aux.getY()+1);
-                }
-                break;
+                nueva.setX(nueva.getX()-range);
+                nueva.setY(nueva.getY()+1);
+            }
+        } catch (ExceptionBadParam | ExceptionNonInitialized ex) {
+            System.out.println("Excepción en updateMap(). Mensaje: "+ex.getMessage());
         }
     }
 
     /**
-     * @brief Metodo que envia el mapa global a un vehiculo
-     * @author Emilien Giard, Jorge
+     * Metodo que envia el mapa global a un vehiculo (fase de barrido).
+     * @param vehiculo AgentID del vehículo a enviar el mapa
+     * @author Emilien, Jorge, Dani
      */
-    private Mapa enviarMapa() {
-        return map;
+    private void enviarMapa(AgentID vehiculo) {
+        ACLMessage outbox = crearMensaje(getAid(), vehiculo, ACLMessage.INFORM,
+                jsonobj.encodeMapa(mapa, objetivo_encontrado),
+                conversation_id, "");
+        send(outbox);
     }
     
     /**
@@ -330,58 +185,53 @@ public class AgenteMapa extends SingleAgent{
      */
      @Override
     public void execute(){
-        logout(); // Remove when agents will close the session
-        int agenteCheckedIn = 0;
+        //logout(); // Remove when agents will close the session
         subscribe();
-        enviarConversationID();
+        enviarEstadoInicial();
 
-        //Inicializamos el mapa
-        
         // bucle principal: espera los mesajes de los otros agentes
         do {
             try {
-                ACLMessage inbox = this.receiveACLMessage();
+                ACLMessage inbox = receiveACLMessage();
                 String command = jsonobj.decodeCommandVehiculo(inbox.getContent());
-                //System.out.println("\nRecibido command "
-                //    + command +" de "+inbox.getSender().getLocalName()+ "content" + inbox.getContent());
+                System.out.println("\nRecibido command "
+                    + command +" de "+inbox.getSender().getLocalName());
                 switch (command) {
                     case "checked-in":
                         System.out.println("Recibida confirmación de que el vehiculo "
                                 + inbox.getSender().getLocalName() +
                                 " ha hecho el checkin.\n");
-                        agenteCheckedIn ++;
                         break;
                     case "update-map":
-                        int bateriaVehiculo = jsonobj.decodeBattery(inbox.getContent());
-                        Posicion posVehiculo = jsonobj.decodeGPS(inbox.getContent());
-                        ArrayList<Integer> radar = jsonobj.decodeRadar(inbox.getContent());
-                        boolean vehiculoEnObjetivo = jsonobj.decodeGoal(inbox.getContent());
-
-                        // TODO: update the AgenteMapa's mapa with the perceptions
-                        //this.updateMap(percepciones);
-                        // TODO: send the global map to the other agent and if he is in the objective
-                        // this.enviarMapa();
+                        JSONArray vision = jsonobj.decodeVision(inbox.getContent());
+                        Posicion pos_vehiculo = jsonobj.decodePos(inbox.getContent());
+                        boolean obj_enc = jsonobj.decodeObjetivoEncontrado(inbox.getContent());
+                        updateMap(vision, pos_vehiculo, obj_enc);
+                        enviarMapa(inbox.getSender());
+                        System.out.println("Mapa global actualizado. Se envia a "+inbox.getSender().getLocalName());
                         break;
                     case "export-map":
-                        this.exportarMapa();
+                        exportarMapa();
                         break;
                     default:
-                        ACLMessage outbox = new ACLMessage();
-                        outbox.setSender(this.getAid());
-                        outbox.setReceiver(new AgentID(inbox.getSender().getLocalName()));
-                        outbox.setPerformative("NOT-UNDERSTOOD");
-                        outbox.setInReplyTo(inbox.getReplyWith());
+                        ACLMessage outbox = crearMensaje(getAid(), inbox.getSender(), 
+                            ACLMessage.NOT_UNDERSTOOD, "", "", "");
                         this.send(outbox);
+                        System.out.println("Agente "+getName()+
+                                " envia NOT UNDERSTOOD a vehiculo"
+                                +inbox.getReceiver().getLocalName());
                         break;
                 }
             } catch (InterruptedException ex) {
-                System.out.println("Error al recibir mensaje");
+                System.out.println("Excepción al recibir mensaje en execute(). Mensaje: "+ex.getMessage());
             }
-        } while(true);
+        } while(!objetivo_encontrado);
         
+        System.out.println("Objetivo encontrado!");
         //Guardamos los datos necesarios para las siguientes ejecuciones(mapa interno)
-        
+        exportarMapa();
         //Terminamos la sesión y realizamos las comunicaciones en caso de ser necesarias con el resto de agentes
+        logout();
     }
     
      /**
@@ -389,27 +239,45 @@ public class AgenteMapa extends SingleAgent{
      * @author Jorge
      */
     private void exportarMapa(){
-        jsonobj.exportMapa(map, objetivo_encontrado, iteracion);
+        jsonobj.exportMapa(mapa, objetivo_encontrado, iteracion+1, nameMap);
     }
     
     /**
-     * Importa el mapa en un archivo llamado "mapa.json"
+     * Importa el mapa desde un archivo llamado "mapa.json"
      * @author Jorge
      */
     private JSONObject importarMapa(){
-        JSONObject obj = jsonobj.importMapa();
+        JSONObject obj = jsonobj.importMapa(nameMap);
         return obj;
     }
     
     /**
-     * Exporta el mapa en un archivo llamado "mapa.json"
-     * @author Jorge
+     * 
+     * @author Jorge, Dani
      */
     private void actualizaDatosMapaImportado(){
-        JSONObject obj = this.importarMapa();
-        this.map.setTam((int)obj.get("tamaño"));
-        this.map.setMapa((Integer[][])obj.get("mapa"));
-        this.iteracion = (int)obj.get("iteracion");
-        this.objetivo_encontrado = (boolean)obj.get("encontrado");
+        try {
+            JSONObject obj = importarMapa();
+            iteracion = obj.getInt("iteracion");
+            if (iteracion == 0)
+                mapa = new Mapa(tam_mapa);
+            else
+            {
+                mapa = new Mapa(1);
+                int tam = obj.getInt("tamanio");
+                mapa.setTam(tam);
+                Integer[][] m = new Integer[tam][tam];
+                JSONArray array = obj.getJSONArray("mapa");
+
+                for (int fil = 0; fil < tam; fil++)
+                    for (int col = 0; col < tam; col++)
+                        m[fil][col] = (Integer)array.getInt(fil*tam+col);
+                
+                mapa.setMapa(m);
+            }
+            objetivo_encontrado = obj.getBoolean("encontrado");
+        } catch (ExceptionBadParam ex) {
+            System.out.println("Excepcion en actualizaDatosMapaImportado: "+ex.getMessage());
+        }
     }
 }

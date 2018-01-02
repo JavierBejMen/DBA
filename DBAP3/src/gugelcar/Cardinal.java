@@ -15,8 +15,9 @@ public class Cardinal {
     
     //Comprueba que el valor del String es correcto
     private boolean checkCard(String card){
-        return (card == "n" || card =="s" || card =="o" || card =="e" ||
-                card == "ne" || card == "no" || card == "se" || card == "so");
+        boolean valido = (card.equals("n") || card.equals("s") || card.equals("o") || card.equals("e") ||
+                card.equals("ne") || card.equals("no") || card.equals("se") || card.equals("so"));
+        return valido;
     }
     //Calcula el valor segun el cardinal, para las comparaciones
     private void calcValue() throws ExceptionNonInitialized{

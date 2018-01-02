@@ -5,7 +5,7 @@ http://mvnrepository.com/artifact/org.json/json/20160810
 */
 
 package JSON;
-import gugelcar.Movimientos;
+import gugelcar.Movimiento;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -13,13 +13,15 @@ import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import gugelcar.AgenteVehiculo;
 import gugelcar.Mapa;
 import gugelcar.Posicion;
+import gugelcar.exceptions.ExceptionBadParam;
+import gugelcar.exceptions.ExceptionNonInitialized;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import org.json.JSONException;
 
 /**
  * Clase encargada de obtener los atributos necesarios de un String
@@ -65,20 +67,6 @@ public class JSON {
     public String encodeCheckin(){
         JSONObject obj = new JSONObject();
         obj.put("command", "checkin");
-        return obj.toString();
-    }
-    
-    /**
-     * Crea el string JSON para enviar si se ha
-     * encontrado el objetivo a los vehículos.
-     * @param obj_enc Booleano que acompaña al campo "objetivo_encontrado"
-     * @return String con el campo booleano "objetivo_encontrado"
-     * @author Dani
-     */
-    public String encodeObjetivoEncontrado(boolean obj_enc){
-        JSONObject obj = new JSONObject();
-        obj.put("result", "OK");
-        obj.put("objetivo_encontrado", obj_enc);
         return obj.toString();
     }
     
@@ -139,7 +127,7 @@ public class JSON {
      * @return String en formato JSON con los parámetros del vehículo
      * @author Javier Bejar Mendez
      */
-    public String encodeAgentParam(AgenteVehiculo vehiculo){
+    /*public String encodeAgentParam(AgenteVehiculo vehiculo){
         JSONObject obj = new JSONObject();
         obj.put("tipo", vehiculo.getTipo());
         obj.put("bateria", vehiculo.getBateria());
@@ -148,32 +136,40 @@ public class JSON {
         obj.put("fly", vehiculo.getFly());
         
         return obj.toString();
-    }
+    }*/
     
     /**
-     * Codifica en JSON los parámetros de un vehiculo para la command update-map
-     * @param data el misma string que el agente recibe del servidor
+     * Codifica en JSON los lo que vé el vehículo actualmente y su posición
+     * @param vision Lo que el vehículo ve actualmente. Por ejemplo, si es un radar,
+     * será un ArrayList de 3x3.
+     * @param pos Posicion actual del vehículo
      * @return String en formato JSON con las percepciones del vehiculo
-     * @author Emilien Giard
+     * @author Emilien Giard, Dani
      */
-    public String encodeUpdateMap(String data){
-        JSONObject obj = new JSONObject(data);
-        obj.put("result", obj.getJSONObject("result"));
-        obj.put("command", "update-map");
-        System.out.println("Update map to send: "+ obj.toString());
+    public String encodeUpdateMap(ArrayList<Integer> vision, Posicion pos, boolean obj_enc){
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("command", "update-map");
+            obj.put("vision",vision);
+            obj.put("x", pos.getX());
+            obj.put("y", pos.getY());
+            obj.put("objetivo_encontrado", obj_enc);
+        } catch (ExceptionNonInitialized ex) {
+            System.out.println("Excepción en encodeUpdateMap(). Mensaje "+ex.getMessage());
+        }
         return obj.toString();
     }
 
     /**
      * Obtiene una cadena codificada en JSON para moverse.
-     * @param mov Movimiento del agente (ver el enum Movimientos)
+     * @param mov Movimiento del agente (ver el enum Movimiento)
      * @see Movimientos.java
      * @return String en formato JSON con el movimiento especificado.
      * @author Dani
      */
-    public String encodeMove(Movimientos mov){
+    public String encodeMove(Movimiento mov){
         JSONObject obj = new JSONObject();
-        obj.put("command", mov);
+        obj.put("command", mov.toString());
         return obj.toString();
     }
     
@@ -184,26 +180,21 @@ public class JSON {
      */
     public String encodeRefuel(){
         JSONObject obj = new JSONObject();
-        obj.put("command", Movimientos.refuel);
+        obj.put("command", "refuel");
         return obj.toString();
     }
     
     /**
      * Decodifica un string JSON con la lectura del radar y lo devuelve
-     * en un array.
+     * en un JSONArray.
      * @param json String JSON con la lectura del radar
-     * @return ArrayList con los valores del radar
+     * @return JSONArray con los valores del radar
      * @author Dani
      */
-    public ArrayList<Integer> decodeRadar(String json){
+    public JSONArray decodeRadar(String json){
         JSONObject obj = new JSONObject(json);
         JSONArray array = obj.getJSONObject("result").getJSONArray("sensor");
-        
-        ArrayList<Integer> radar = new ArrayList();
-        for (Object o : array)
-            radar.add((Integer)o);
-        
-        return radar;
+        return array;
     }
     
     /**
@@ -243,17 +234,33 @@ public class JSON {
     }
     
     /**
-     * Decodifica un string JSON con la lectura del GPS y 
+     * Decodifica un string JSON con las percepciones y 
      * lo devuelve como un objeto Point
      * @param json String JSON de la lectura del GPS
-     * @return Objeto Point con los valores de x e y
-     * @author Dani y Emilien
+     * @return Objeto Posicion con los valores de x e y
+     * @author Dani, Emilien
      */
     public Posicion decodeGPS(String json){
         JSONObject obj = new JSONObject(json);
 
         int x = obj.getJSONObject("result").getInt("x");
         int y = obj.getJSONObject("result").getInt("y");
+        
+        return (new Posicion(x,y));
+    }
+    
+    /**
+     * Decodifica un string JSON con los campos "x" e "y" y 
+     * lo devuelve como un objeto Posicion
+     * @param json String JSON de la lectura del GPS
+     * @return Objeto Posicion con los valores de x e y
+     * @author Dani
+     */
+    public Posicion decodePos(String json){
+        JSONObject obj = new JSONObject(json);
+
+        int x = obj.getInt("x");
+        int y = obj.getInt("y");
         
         return (new Posicion(x,y));
     }
@@ -271,30 +278,70 @@ public class JSON {
     }
 
     /**
-     * @author Emilien Giard
-     * Decodifica un string JSON con los percepciones de un vehiculo
-     * por el AgenteMapa y lo devuelve.
-     * @param json String JSON con los percepciones.
-     * @return matriz de los percepciones.
+     * @author Emilien Giard, Dani
+     * Decodifica un string JSON con el campo "mapa" 
+     * y el campo "tam", donde tam es el tamaño de la fila,
+     * y lo devuelve en un objeto Mapa.
+     * @param json String JSON con el mapa y el tamaño
+     * @return Mapa a partir del string JSON con el campo "mapa" y "tam"
      */
-    public Integer[][] decodePercepciones(String json){
-        JSONObject obj = new JSONObject(json);
-        JSONArray array = obj.getJSONArray("percepciones");
-        // get the number of case of the perceptions' side
-        int length = array.length() / array.length();
-        Integer[][] percepciones = new Integer[length][length];
-        int i = 0, j = 0;
-        for (Object o : array) {
-            percepciones[i][j] = (Integer)o;
-            i ++;
-            // at the end of a line, go to the first column of the next line
-            if (i == (length - 1)){
-                i = 0;
-                j++;
-            }
+    public Mapa decodeMapa(String json){
+        Mapa mapa = null;
+        
+        try {
+            JSONObject obj = new JSONObject(json);
+            JSONArray array = obj.getJSONArray("mapa");
+            int tam = obj.getInt("tam");
+            Integer[][] map = new Integer[tam][tam];
+            
+            for (int fil = 0; fil < tam; fil++)
+                for (int col = 0; col < tam; col++)
+                    map[fil][col] = (Integer)array.getInt(fil*tam+col);
+            
+            mapa = new Mapa(1);
+            mapa.setTam(tam);
+            mapa.setMapa(map);
+        } catch (ExceptionBadParam ex) {
+            System.out.println("Excepcion en decodeMapa(). Mensaje: "+ex.getMessage());
         }
-
-        return percepciones;
+        
+        return mapa;
+    }
+    
+    /**
+     * Codifica un mapa, el tamaño del mismo y si se ha encontrado el objetivo
+     * en un string json, con el formato
+     * {"mapa":[...], "tam":..., "objetivo_encontrado":...}
+     * @author Dani
+     * @param m Mapa en cuestión
+     * @param obj_enc Booleano con si se ha encontrado el objetivo o no
+     * @return String json con el formato {"mapa":[...], "tam":..., "objetivo_encontrado":...}
+     */
+    public String encodeMapa(Mapa m, boolean obj_enc){
+        JSONObject obj = new JSONObject();
+        int tam = m.getTam();
+        obj.put("objetivo_encontrado", obj_enc);
+        obj.put("tam", tam);
+        JSONArray array = new JSONArray();
+        Integer[][] matriz = new Integer[tam][tam];
+        matriz = m.mapToMatrix();
+        for (int fil = 0; fil < tam; fil++)
+            for (int col = 0; col < tam; col++)
+                array.put(matriz[fil][col]);
+        obj.put("mapa",array);
+        return obj.toString();
+    }
+    
+    /**
+     * Decodifica el tamaño de un mapa (tamaño de fila) pasado por el parámetro
+     * "tam" en una cadena json.
+     * @param json Cadena json con el parámetro "tam"
+     * @return entero con el tamaño
+     * @author Dani
+     */
+    public int decodeTam(String json){
+        JSONObject obj = new JSONObject(json);
+        return obj.getInt("tam");
     }
 
     /**
@@ -330,36 +377,32 @@ public class JSON {
      * @param encontrado boolean que indica si el objetivo ha sido encontrado
      * @param iteracion número de la iteración en la que nos encontramos
 
-     * @author Jorge,Dani
+     * @author Jorge, Dani
      */
-    public void exportMapa(Mapa map, boolean encontrado, int iteracion){
-            JSONObject obj = new JSONObject();
-            try{
+    public void exportMapa(Mapa map, boolean encontrado, int iteracion, String nombre_mapa){
+        JSONObject obj = new JSONObject();
+        try{
+            int tam = map.getTam();
             obj.put("iteracion", iteracion);
             obj.put("encontrado", encontrado);
-            obj.put("tamaño", map.getTam());
+            obj.put("tamanio", tam);
+            JSONArray array = new JSONArray();
+            for (int fil = 0; fil < tam; fil++)
+                for (int col = 0; col < tam; col++)
+                    array.put(map.get(fil,col));
             
-            int tamaño = map.getTam();
-            ArrayList<Object> mapa = new ArrayList();
-            for(int i=0; i < tamaño; i++){
-                for(int j = 0; j < tamaño; j++){
-                    mapa.add(map.getMapa(i, j));
-                }
-            }
-            
-            obj.put("mapa",mapa);
-                File archivo = new File("mapa.json");
-                FileWriter escribir=new FileWriter(archivo,false); 
-                escribir.write(obj.toString());
-                escribir.close();
-                }
+            obj.put("mapa",array);
 
-            //Si existe un problema al escribir cae aqui
-            catch(Exception e)
-            {
-            System.out.println("Error al exportar el mapa");
-            }
+            File archivo = new File(nombre_mapa+".json");
+            FileWriter escribir=new FileWriter(archivo,false); 
+            escribir.write(obj.toString());
+            escribir.close();
+            
+        //Si existe un problema al escribir cae aqui
+        } catch(JSONException | IOException | ExceptionBadParam e){
+            System.out.println("Error al exportar el mapa: "+e.getMessage());
         }
+    }
 
         
     /**
@@ -367,32 +410,51 @@ public class JSON {
      * @return JSONObject con el contenido de la iteración anterior
      * @author Jorge,Dani
      */
-    public JSONObject importMapa(){
+    public JSONObject importMapa(String nombre_mapa){
         JSONObject obj = null;
         try{
-        String cadena;
-        File archivo = new File("mapa.json");
-        FileReader f = new FileReader(archivo);
-        BufferedReader b = new BufferedReader(f);
-        String aux = "";
-        while((cadena = b.readLine())!=null) {
-            aux = cadena;
-        }
-        b.close();
+            String cadena;
+            File archivo = new File(nombre_mapa+".json");
+            FileReader f = new FileReader(archivo);
+            BufferedReader b = new BufferedReader(f);
+            String aux = "";
+            while((cadena = b.readLine())!=null)
+                aux = cadena;
+            
+            b.close();
 
-        obj = new JSONObject(aux);
+            obj = new JSONObject(aux);
 
-        }catch(Exception e)
-        {
-        System.out.println("Error al importar el mapa");
+        } catch(Exception e){
+            System.out.println("Exepción en importMapa() de la clase JSON: "+e.getMessage());
         }
+        
         return obj;
         
     }
-    
-        public String encodeConfirmacionCheckin() {
-            JSONObject obj = new JSONObject();
-            obj.put("command", "checked-in");
-            return obj.toString();
-        }
+    /**
+     * @author Dani
+     * @return 
+     */
+    public String encodeConfirmacionCheckin() {
+        JSONObject obj = new JSONObject();
+        obj.put("command", "checked-in");
+        return obj.toString();
     }
+    
+    /**
+     * @author Dani
+     * @param json
+     * @return 
+     */
+    public JSONArray decodeVision(String json) {
+        JSONArray array = new JSONArray();
+        try {
+            JSONObject obj = new JSONObject(json);
+            array = obj.getJSONArray("vision");
+        } catch (Exception ex) {
+            System.out.println("Excepcion en decodeVision(): "+ex.getMessage());
+        }
+        return array;
+    }
+}
