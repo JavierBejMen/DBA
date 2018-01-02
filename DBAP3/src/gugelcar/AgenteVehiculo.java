@@ -390,7 +390,7 @@ public class AgenteVehiculo extends SingleAgent{
         String percepciones = recibirPercepciones(); // recibir percepciones del servidor
                                                          // y procesar la respuesta
         
-        while (!objetivo_encontrado && quedaEnergia() && puedoMoverme())
+        while ((!objetivo_encontrado || !estoy_en_objetivo) && quedaEnergia() && puedoMoverme())
         {
             actualizarMapaLocal(percepciones);
             sendUpdateMap();
@@ -417,5 +417,12 @@ public class AgenteVehiculo extends SingleAgent{
      */
     private boolean quedaEnergia(){
         return (energy > 0);
+    }
+    /**
+     * Devuelve true si queda energía global, false en caso contrario
+     * @author Jorge
+     */
+    private boolean getEstoyEnObjetivo(){
+        return estoy_en_objetivo;
     }
 }

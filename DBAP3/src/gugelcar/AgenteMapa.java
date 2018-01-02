@@ -227,6 +227,7 @@ public class AgenteMapa extends SingleAgent{
             }
         } while(!objetivo_encontrado);
         
+        
         System.out.println("Objetivo encontrado!");
         //Guardamos los datos necesarios para las siguientes ejecuciones(mapa interno)
         exportarMapa();
