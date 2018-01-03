@@ -457,4 +457,24 @@ public class JSON {
         }
         return array;
     }
+      /**
+     * @author Jorge
+     * @return 
+     */
+    public String encodeTurno(boolean turno) {
+        JSONObject obj = new JSONObject();
+        obj.put("turno", turno);
+        return obj.toString();
+    }
+    
+      /**
+     * @author Jorge
+     * @return 
+     */
+    public boolean decodeTurno(String json) {
+        JSONObject obj = new JSONObject(json);
+        boolean turno = obj.getBoolean("turno");
+        return turno;
+    }
+    
 }

@@ -378,7 +378,7 @@ public class AgenteVehiculo extends SingleAgent{
      */
     @Override
     public void execute(){
-        
+        Movimiento m = null;
         // Recibimos el mapa, si se ha encontrado el objetivo y 
         // el conversation ID del Agente Mapa
         getEstadoYConversationID();
@@ -397,8 +397,8 @@ public class AgenteVehiculo extends SingleAgent{
             
             if (bateria <= fuelrate && quedaEnergia())
                refuel();
-            
-            move(decidirExploracion());
+            m = decidirExploracion();
+            move(m);
             percepciones = recibirPercepciones();
         }
     }

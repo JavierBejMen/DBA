@@ -30,7 +30,7 @@ public class AgenteMapa extends SingleAgent{
     private int iteracion;
     private int energy; // Batería global
     private final int tam_mapa = 111;
-    
+    private boolean turno_ocupado;
     //Comunicacion
     private final JSON jsonobj;
     
@@ -51,6 +51,7 @@ public class AgenteMapa extends SingleAgent{
         this.controlador_id = controlador_id;
         jsonobj = new JSON();
         this.actualizaDatosMapaImportado();
+        this.turno_ocupado = false;
     }
     
    
@@ -280,5 +281,41 @@ public class AgenteMapa extends SingleAgent{
         } catch (ExceptionBadParam ex) {
             System.out.println("Excepcion en actualizaDatosMapaImportado: "+ex.getMessage());
         }
+    }
+    /**
+     * set de turno_ocupado
+     * @author Jorge
+     */
+    private void setTurnoOcupado(boolean t){
+        this.turno_ocupado = t;
+    }
+    /**
+     * get de turno_ocupado
+     * @author Jorge
+     */
+    private boolean getTurnoOcupado(){
+        return this.turno_ocupado;
+    }
+    /**
+     * Metodo que envia el turno a un vehiculo (fase de barrido).
+     * @param vehiculo AgentID del vehículo a enviar el mapa
+     * @author Jorge
+     */
+    private void enviarTurno(AgentID vehiculo) {
+        ACLMessage outbox = crearMensaje(getAid(), vehiculo, ACLMessage.INFORM,
+                jsonobj.encodeTurno(turno_ocupado),
+                conversation_id, "");
+        if(!getTurnoOcupado()) setTurnoOcupado(true);
+        send(outbox);
+    }
+    /**
+     * Metodo que envia el turno a un vehiculo (fase de barrido).
+     * @param vehiculo AgentID del vehículo a enviar el mapac
+     * @author Jorge
+     */
+    private void recibirFinTurno() throws InterruptedException {
+        ACLMessage inbox = receiveACLMessage();
+        boolean turno = jsonobj.decodeTurno(inbox.getContent());
+        this.setTurnoOcupado(turno);
     }
 }
