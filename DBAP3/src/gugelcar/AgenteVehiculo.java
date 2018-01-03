@@ -398,6 +398,15 @@ public class AgenteVehiculo extends SingleAgent{
             if (bateria <= fuelrate && quedaEnergia())
                refuel();
             m = decidirExploracion();
+            
+            /*Jorge: (Alomejor esta parte no hace falta)Pseudocódigo para comprobar el turno
+            pregunto a agentemapa por turno
+            si turnoocupado=false
+            move
+            enviarturno a agentemapa = false
+            sino esperar
+            */
+            
             move(m);
             percepciones = recibirPercepciones();
         }
