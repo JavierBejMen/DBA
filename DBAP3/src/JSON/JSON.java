@@ -477,4 +477,39 @@ public class JSON {
         return turno;
     }
     
+    /**
+     * Decodifica si el vehiculo debe cierrar la sesion
+     * @param json Cadena json con el parámetro "cierra_sesion"
+     * @return boolean
+     * @author Emilien
+     */
+    public boolean decodeCierraSesion(String json){
+        JSONObject obj = new JSONObject(json);
+        return obj.getBoolean("cierra_sesion");
+    }
+    
+    /**
+     * Codifica la command cancel del vehiculo por el agente mapa
+     * @author Emilien
+     * @return String JSON con el formato {"command": "cancel"}
+     */
+    public String encodeCancelMapa() {
+        JSONObject obj = new JSONObject();
+        obj.put("command", "cancel");
+        return obj.toString();
+    }
+    
+    /**
+     * Codifica la respuesta al cancel de un vehiculo
+     * @author Emilien
+     * @param cierra_sesion boolean que es cierto si 4 vehiculos enviaron un cancel
+     * @return String JSON con el formato {"result": "OK", "cierra_sesion": false}
+     */
+    public String encodeCierraSesion(boolean cierra_sesion) {
+        JSONObject obj = new JSONObject();
+        obj.put("result", "OK");
+        obj.put("cierra_sesion", cierra_sesion);
+        return obj.toString();
+    }
+
 }

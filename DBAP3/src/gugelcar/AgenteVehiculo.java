@@ -201,6 +201,23 @@ public class AgenteVehiculo extends SingleAgent{
     }
     
     /**
+     * Envía el cancel al agente Mapa y se recibe si el vehiculo debe cierrar la sesion
+     * @author Emilien
+     */
+    private void makeCancel() {
+      ACLMessage outbox = crearMensaje(getAid(),agente_mapa_id,ACLMessage.CANCEL,
+                    jsonobj.encodeCancelMapa(), "", "");
+      send(outbox);
+        try {
+            ACLMessage inbox = receiveACLMessage();
+            boolean cierraSesion = jsonobj.decodeCierraSesion(inbox.getContent());
+            System.out.println("Vehiculo " + getName() + ". Recibe cierra sesion: " + cierraSesion);
+        } catch (InterruptedException ex) {
+            System.out.println("Excepción en makeCancel(). Error: " + ex.getMessage());
+        }
+    }
+    
+    /**
      * Mira en las 8 casillas que tiene alrededor para moverse a la que tiene
      * menor valor. Da preferencia al Sur y al Este. 
      * @todo hacer barrido en condiciones, si puede ser que se vayan haciendo
@@ -355,7 +372,9 @@ public class AgenteVehiculo extends SingleAgent{
         }
     }
     /**
-     * 
+     * Gestion de los movimientos de los vehiculos y de los errores relacionados
+     * @param m el movimiento a hacer
+     * @author Emilien
      */
     private void move(Movimiento m){
         ACLMessage outbox = crearMensaje(getAid(), controlador_id, ACLMessage.REQUEST,
@@ -367,6 +386,17 @@ public class AgenteVehiculo extends SingleAgent{
             System.out.println("Vehículo " +getName()+ " hace el movimiento " +m+
                     " y recibe: "+inbox.getContent());
             replyWith = inbox.getReplyWith();
+            // Si el vehiculo CRASHED, hacemos un CANCEL (si un vehiculo crashed en un otro vehiculo, el otro vehiculo recibe UNREGISTERED cuando quiere mover)
+            if (inbox.getPerformativeInt() == ACLMessage.FAILURE) {
+                String failureReason = jsonobj.decodeError(inbox.getContent());
+                // hace un cancel de mas para el otro agente
+                if (failureReason.equals("CRASHED WITH AGENT")) {
+                    makeCancel();
+                    makeCancel();
+                } else {
+                    makeCancel();
+                }
+            }
         } catch (InterruptedException ex) {
             System.out.println("InterruptedException en refuel(). Error: "+ex.getMessage());
         }
@@ -410,6 +440,8 @@ public class AgenteVehiculo extends SingleAgent{
             move(m);
             percepciones = recibirPercepciones();
         }
+
+        makeCancel();
     }
 
     /**

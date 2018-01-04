@@ -31,6 +31,7 @@ public class AgenteMapa extends SingleAgent{
     private int energy; // Batería global
     private final int tam_mapa = 111;
     private boolean turno_ocupado;
+    private int numeroCancel;
     //Comunicacion
     private final JSON jsonobj;
     
@@ -52,6 +53,7 @@ public class AgenteMapa extends SingleAgent{
         jsonobj = new JSON();
         this.actualizaDatosMapaImportado();
         this.turno_ocupado = false;
+        this.numeroCancel = 0;
     }
     
    
@@ -129,6 +131,18 @@ public class AgenteMapa extends SingleAgent{
     private void enviarMapa(AgentID vehiculo) {
         ACLMessage outbox = crearMensaje(getAid(), vehiculo, ACLMessage.INFORM,
                 jsonobj.encodeMapa(mapa, objetivo_encontrado),
+                conversation_id, "");
+        send(outbox);
+    }
+    
+    /**
+     * Metodo que envia si el vehiculo debe cierra la sesion o no.
+     * @param vehiculo AgentID del vehículo a enviar el mapa
+     * @author Emilien
+     */
+    private void enviarInformCancel(AgentID vehiculo) {
+        ACLMessage outbox = crearMensaje(getAid(), vehiculo, ACLMessage.INFORM,
+                jsonobj.encodeCierraSesion(numeroCancel == 4),
                 conversation_id, "");
         send(outbox);
     }
@@ -214,22 +228,26 @@ public class AgenteMapa extends SingleAgent{
                     case "export-map":
                         exportarMapa();
                         break;
+                    case "cancel":
+                        numeroCancel ++;
+                        enviarInformCancel(inbox.getSender());
+                        break;
                     default:
                         ACLMessage outbox = crearMensaje(getAid(), inbox.getSender(), 
                             ACLMessage.NOT_UNDERSTOOD, "", "", "");
                         this.send(outbox);
                         System.out.println("Agente "+getName()+
-                                " envia NOT UNDERSTOOD a vehiculo"
-                                +inbox.getReceiver().getLocalName());
+                                " envia NOT UNDERSTOOD a vehiculo "
+                                +inbox.getSender().getLocalName());
                         break;
                 }
             } catch (InterruptedException ex) {
                 System.out.println("Excepción al recibir mensaje en execute(). Mensaje: "+ex.getMessage());
             }
-        } while(!objetivo_encontrado);
+        } while((!objetivo_encontrado) || (numeroCancel <= 4));
         
         
-        System.out.println("Objetivo encontrado!");
+        System.out.println("Objetivo encontrado! o recibe 4 cancel de los vehiculos");
         //Guardamos los datos necesarios para las siguientes ejecuciones(mapa interno)
         exportarMapa();
         //Terminamos la sesión y realizamos las comunicaciones en caso de ser necesarias con el resto de agentes
