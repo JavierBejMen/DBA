@@ -32,6 +32,7 @@ public class AgenteMapa extends SingleAgent{
     private final int tam_mapa = 111;
     private boolean turno_ocupado;
     private int numeroCancel;
+    private ArrayList<AgentID> vehiculoEsperando;
     //Comunicacion
     private final JSON jsonobj;
     
@@ -54,6 +55,7 @@ public class AgenteMapa extends SingleAgent{
         this.actualizaDatosMapaImportado();
         this.turno_ocupado = false;
         this.numeroCancel = 0;
+        this.vehiculoEsperando = new ArrayList<AgentID>();
     }
     
    
@@ -200,7 +202,7 @@ public class AgenteMapa extends SingleAgent{
      */
      @Override
     public void execute(){
-        //logout(); // Remove when agents will close the session
+        // logout(); // Remove when agents will close the session
         subscribe();
         enviarEstadoInicial();
 
@@ -222,7 +224,14 @@ public class AgenteMapa extends SingleAgent{
                         Posicion pos_vehiculo = jsonobj.decodePos(inbox.getContent());
                         boolean obj_enc = jsonobj.decodeObjetivoEncontrado(inbox.getContent());
                         updateMap(vision, pos_vehiculo, obj_enc);
-                        enviarMapa(inbox.getSender());
+                        if (turno_ocupado == false) {
+                            //first time only
+                            turno_ocupado = true;
+                            enviarMapa(inbox.getSender());
+                        } else {
+                            // add the id of the vehicule at the end of the list
+                            vehiculoEsperando.add(inbox.getSender());
+                        }
                         System.out.println("Mapa global actualizado. Se envia a "+inbox.getSender().getLocalName());
                         break;
                     case "export-map":
@@ -231,6 +240,10 @@ public class AgenteMapa extends SingleAgent{
                     case "cancel":
                         numeroCancel ++;
                         enviarInformCancel(inbox.getSender());
+                        break;
+                    case "end-move":
+                        enviarMapa(vehiculoEsperando.get(0));
+                        vehiculoEsperando.remove(0);
                         break;
                     default:
                         ACLMessage outbox = crearMensaje(getAid(), inbox.getSender(), 

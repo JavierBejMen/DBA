@@ -511,5 +511,15 @@ public class JSON {
         obj.put("cierra_sesion", cierra_sesion);
         return obj.toString();
     }
-
+            
+    /**
+     * Codifica la respuesta que coresponde a el fin de un movimiento
+     * @author Emilien
+     * @return String JSON con el formato {"result": "OK", "command": "end-move"}
+     */
+    public String encodeFinMover() {
+        JSONObject obj = new JSONObject();
+        obj.put("command", "end-move");
+        return obj.toString();
+    }
 }

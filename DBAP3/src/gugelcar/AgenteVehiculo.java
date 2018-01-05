@@ -386,6 +386,7 @@ public class AgenteVehiculo extends SingleAgent{
             System.out.println("Vehículo " +getName()+ " hace el movimiento " +m+
                     " y recibe: "+inbox.getContent());
             replyWith = inbox.getReplyWith();
+
             // Si el vehiculo CRASHED, hacemos un CANCEL (si un vehiculo crashed en un otro vehiculo, el otro vehiculo recibe UNREGISTERED cuando quiere mover)
             if (inbox.getPerformativeInt() == ACLMessage.FAILURE) {
                 String failureReason = jsonobj.decodeError(inbox.getContent());
@@ -397,6 +398,11 @@ public class AgenteVehiculo extends SingleAgent{
                     makeCancel();
                 }
             }
+
+            // send to AgenteMapa that the move has been done
+            outbox = crearMensaje(getAid(),agente_mapa_id,ACLMessage.REQUEST,
+                    jsonobj.encodeFinMover(), "", "");
+            send(outbox);
         } catch (InterruptedException ex) {
             System.out.println("InterruptedException en refuel(). Error: "+ex.getMessage());
         }
