@@ -32,6 +32,7 @@ public class AgenteMapa extends SingleAgent{
     private final int tam_mapa = 111;
     private boolean turno_ocupado;
     private int numeroCancel;
+    private ArrayList<AgentID> vehiculoEsperando;
     //Comunicacion
     private final JSON jsonobj;
     
@@ -54,6 +55,7 @@ public class AgenteMapa extends SingleAgent{
         this.actualizaDatosMapaImportado();
         this.turno_ocupado = false;
         this.numeroCancel = 0;
+        this.vehiculoEsperando = new ArrayList<AgentID>();
     }
     
    
@@ -118,6 +120,62 @@ public class AgenteMapa extends SingleAgent{
                 nueva.setX(nueva.getX()-range);
                 nueva.setY(nueva.getY()+1);
             }
+        } catch (ExceptionBadParam | ExceptionNonInitialized ex) {
+            System.out.println("Excepción en updateMap(). Mensaje: "+ex.getMessage());
+        }
+    }
+    
+    /**
+     * Metodo que actualiza el mapa en funcion de las percepciones de un vehiculo
+     * @param vision visión actual del vehículo
+     * @param pos posicion en el mapa global del vehículo
+     * @param obj_enc si se ha encontrado el objetivo
+     * @author Emilien Giard, Jorge, Dani
+     */
+    private void actualizarPosicionVehiculo(String m, Posicion pos) {
+        try {
+            // set la posicion del vehiculo a vacia
+            mapa.set(pos, 0);
+            switch (m){
+                case "moveN":
+                    // set la nueva posicion del vehiculo
+                    pos.setY(pos.getY() - 1);
+                    break;
+                case "moveS":
+                    // set la nueva posicion del vehiculo
+                    pos.setY(pos.getY() + 1);
+                    break;
+                case "moveE":
+                    // set la nueva posicion del vehiculo
+                    pos.setX(pos.getX() + 1);
+                    break;
+                case "moveW":
+                    // set la nueva posicion del vehiculo
+                    pos.setX(pos.getX() - 1);
+                    break;
+                case "moveNE":
+                    // set la nueva posicion del vehiculo
+                    pos.setY(pos.getY() - 1);
+                    pos.setX(pos.getX() + 1);
+                    break;
+                case "moveNW":
+                    // set la nueva posicion del vehiculo
+                    pos.setY(pos.getY() - 1);
+                    pos.setX(pos.getX() - 1);
+                    break;
+                case "moveSE":
+                    // set la nueva posicion del vehiculo
+                    pos.setY(pos.getY() + 1);
+                    pos.setX(pos.getX() + 1);
+                    break;
+                case "moveSW":
+                    // set la nueva posicion del vehiculo
+                    pos.setY(pos.getY() + 1);
+                    pos.setX(pos.getX() - 1);
+                    break;
+            }
+            // set la posicion del vehiculo
+            mapa.set(pos, 4);
         } catch (ExceptionBadParam | ExceptionNonInitialized ex) {
             System.out.println("Excepción en updateMap(). Mensaje: "+ex.getMessage());
         }
@@ -200,7 +258,7 @@ public class AgenteMapa extends SingleAgent{
      */
      @Override
     public void execute(){
-        //logout(); // Remove when agents will close the session
+        logout(); // Remove when agents will close the session
         subscribe();
         enviarEstadoInicial();
 
@@ -222,7 +280,14 @@ public class AgenteMapa extends SingleAgent{
                         Posicion pos_vehiculo = jsonobj.decodePos(inbox.getContent());
                         boolean obj_enc = jsonobj.decodeObjetivoEncontrado(inbox.getContent());
                         updateMap(vision, pos_vehiculo, obj_enc);
-                        enviarMapa(inbox.getSender());
+                        if (turno_ocupado == false) {
+                            //first time only
+                            turno_ocupado = true;
+                            enviarMapa(inbox.getSender());
+                        } else {
+                            // add the id of the vehicule at the end of the list
+                            vehiculoEsperando.add(inbox.getSender());
+                        }
                         System.out.println("Mapa global actualizado. Se envia a "+inbox.getSender().getLocalName());
                         break;
                     case "export-map":
@@ -231,6 +296,16 @@ public class AgenteMapa extends SingleAgent{
                     case "cancel":
                         numeroCancel ++;
                         enviarInformCancel(inbox.getSender());
+                        break;
+                    case "end-move":
+                        // actualizar la posicion del vehiculo despus su movimiento para evitar colisiones de vehículos
+                        String movimiento = jsonobj.decodeMovimiento(inbox.getContent());
+                        Posicion pos_vehiculo_movimiento = jsonobj.decodePos(inbox.getContent());
+                        actualizarPosicionVehiculo(movimiento, pos_vehiculo_movimiento);
+                        
+                        // envia la mapa a el primero vehiculo esperando
+                        enviarMapa(vehiculoEsperando.get(0));
+                        vehiculoEsperando.remove(0);
                         break;
                     default:
                         ACLMessage outbox = crearMensaje(getAid(), inbox.getSender(), 

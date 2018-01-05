@@ -511,5 +511,35 @@ public class JSON {
         obj.put("cierra_sesion", cierra_sesion);
         return obj.toString();
     }
-
+            
+    /**
+     * Codifica la respuesta que coresponde a el fin de un movimiento
+     * @author Emilien
+     * @param m el movimiento del vehiculo
+     * @param pos al posicion del vehiculo
+     * @return String JSON con el formato {"result": "OK", "command": "end-move"}
+     */
+    public String encodeFinMover(Movimiento m, Posicion pos) {
+        JSONObject obj = new JSONObject();
+        try {
+            obj.put("command", "end-move");
+            obj.put("movimiento", m);
+            obj.put("x", pos.getX());
+            obj.put("y", pos.getY());
+        } catch (ExceptionNonInitialized ex) {
+            System.out.println("Excepción en encodeFinMover(). Mensaje "+ex.getMessage());
+        }
+        return obj.toString();
+    }
+    
+    /**
+     * Decodifica el movimiento que ha hecho el vehiculo para actualizar su posicion
+     * @param json Cadena json con el parámetro "movimiento"
+     * @return string
+     * @author Emilien
+     */
+    public String decodeMovimiento(String json){
+        JSONObject obj = new JSONObject(json);
+        return obj.getString("movimiento");
+    }
 }
