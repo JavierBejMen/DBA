@@ -401,7 +401,7 @@ public class AgenteVehiculo extends SingleAgent{
 
             // send to AgenteMapa that the move has been done
             outbox = crearMensaje(getAid(),agente_mapa_id,ACLMessage.REQUEST,
-                    jsonobj.encodeFinMover(), "", "");
+                    jsonobj.encodeFinMover(m, pos), "", "");
             send(outbox);
         } catch (InterruptedException ex) {
             System.out.println("InterruptedException en refuel(). Error: "+ex.getMessage());

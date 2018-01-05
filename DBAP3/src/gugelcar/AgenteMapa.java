@@ -124,6 +124,62 @@ public class AgenteMapa extends SingleAgent{
             System.out.println("Excepción en updateMap(). Mensaje: "+ex.getMessage());
         }
     }
+    
+    /**
+     * Metodo que actualiza el mapa en funcion de las percepciones de un vehiculo
+     * @param vision visión actual del vehículo
+     * @param pos posicion en el mapa global del vehículo
+     * @param obj_enc si se ha encontrado el objetivo
+     * @author Emilien Giard, Jorge, Dani
+     */
+    private void actualizarPosicionVehiculo(String m, Posicion pos) {
+        try {
+            // set la posicion del vehiculo a vacia
+            mapa.set(pos, 0);
+            switch (m){
+                case "moveN":
+                    // set la nueva posicion del vehiculo
+                    pos.setY(pos.getY() - 1);
+                    break;
+                case "moveS":
+                    // set la nueva posicion del vehiculo
+                    pos.setY(pos.getY() + 1);
+                    break;
+                case "moveE":
+                    // set la nueva posicion del vehiculo
+                    pos.setX(pos.getX() + 1);
+                    break;
+                case "moveW":
+                    // set la nueva posicion del vehiculo
+                    pos.setX(pos.getX() - 1);
+                    break;
+                case "moveNE":
+                    // set la nueva posicion del vehiculo
+                    pos.setY(pos.getY() - 1);
+                    pos.setX(pos.getX() + 1);
+                    break;
+                case "moveNW":
+                    // set la nueva posicion del vehiculo
+                    pos.setY(pos.getY() - 1);
+                    pos.setX(pos.getX() - 1);
+                    break;
+                case "moveSE":
+                    // set la nueva posicion del vehiculo
+                    pos.setY(pos.getY() + 1);
+                    pos.setX(pos.getX() + 1);
+                    break;
+                case "moveSW":
+                    // set la nueva posicion del vehiculo
+                    pos.setY(pos.getY() + 1);
+                    pos.setX(pos.getX() - 1);
+                    break;
+            }
+            // set la posicion del vehiculo
+            mapa.set(pos, 4);
+        } catch (ExceptionBadParam | ExceptionNonInitialized ex) {
+            System.out.println("Excepción en updateMap(). Mensaje: "+ex.getMessage());
+        }
+    }
 
     /**
      * Metodo que envia el mapa global a un vehiculo (fase de barrido).
@@ -202,7 +258,7 @@ public class AgenteMapa extends SingleAgent{
      */
      @Override
     public void execute(){
-        // logout(); // Remove when agents will close the session
+        logout(); // Remove when agents will close the session
         subscribe();
         enviarEstadoInicial();
 
@@ -242,6 +298,12 @@ public class AgenteMapa extends SingleAgent{
                         enviarInformCancel(inbox.getSender());
                         break;
                     case "end-move":
+                        // actualizar la posicion del vehiculo despus su movimiento para evitar colisiones de vehículos
+                        String movimiento = jsonobj.decodeMovimiento(inbox.getContent());
+                        Posicion pos_vehiculo_movimiento = jsonobj.decodePos(inbox.getContent());
+                        actualizarPosicionVehiculo(movimiento, pos_vehiculo_movimiento);
+                        
+                        // envia la mapa a el primero vehiculo esperando
                         enviarMapa(vehiculoEsperando.get(0));
                         vehiculoEsperando.remove(0);
                         break;
