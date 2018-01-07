@@ -16,18 +16,18 @@ public class main {
 
      /**
      * @param args the command line arguments
-     * @author Emilien Giard
+     * @author Emilien Giard, Javier Bejar Mendez
      */
     public static void main(String[] args) {
-
+        System.out.println("Creando los agentes y recursos necesarios para lanzarlos");
         String controlador_name = "Cerastes";
-        String agente_mapa_name = "burocrata";
-        String vehiculo1_name = "1";
-        String vehiculo2_name = "2";
-        String vehiculo3_name = "3";
-        String vehiculo4_name = "4";
+        String agente_mapa_name = "agente_mapa";
+        String vehiculo1_name = "veh_1";
+        String vehiculo2_name = "veh_2";
+        String vehiculo3_name = "veh_3";
+        String vehiculo4_name = "veh_4";
         
-        String mapName = "map1";
+        String mapName = "map2";
         
         AgentID controlador_id, agente_mapa_id;
         ArrayList<AgentID> vehiculos = new ArrayList();
@@ -60,6 +60,8 @@ public class main {
             vehiculo2.start();
             vehiculo3.start();
             vehiculo4.start();
+            
+            System.out.println("Init<========= OK");
             
         } catch (Exception ex) {
             System.out.println("Excepción en main(): "+ex.getMessage());

@@ -33,6 +33,8 @@ public class AgenteMapa extends SingleAgent{
     private boolean turno_ocupado;
     private int numeroCancel;
     private ArrayList<AgentID> vehiculoEsperando;
+    private Posicion goal_pos;
+    
     //Comunicacion
     private final JSON jsonobj;
     
@@ -48,6 +50,7 @@ public class AgenteMapa extends SingleAgent{
     public AgenteMapa(AgentID aid, String nameMap, AgentID controlador_id, 
             ArrayList<AgentID> aids) throws Exception{
         super(aid);
+        this.goal_pos = new Posicion();
         this.vehiculos = aids;
         this.nameMap = nameMap;
         this.controlador_id = controlador_id;
@@ -56,6 +59,7 @@ public class AgenteMapa extends SingleAgent{
         this.turno_ocupado = false;
         this.numeroCancel = 0;
         this.vehiculoEsperando = new ArrayList<AgentID>();
+        
     }
     
    
@@ -98,28 +102,23 @@ public class AgenteMapa extends SingleAgent{
      * @param vision visión actual del vehículo
      * @param pos posicion en el mapa global del vehículo
      * @param obj_enc si se ha encontrado el objetivo
-     * @author Emilien Giard, Jorge, Dani
+     * @author Emilien Giard, Jorge, Dani, Javier Bejar Mendez
      */
     private void updateMap(JSONArray vision, Posicion pos, boolean obj_enc) {
-        objetivo_encontrado = obj_enc;
-        int dist;
-        if (vision.length() == 9)
-            dist = 1;
-        else if (vision.length() == 25)
-            dist = 2;
-        else
-            dist = 5;
-        try {
-            Posicion nueva = new Posicion(pos.getX()-dist,pos.getY()-dist);
-            int range = (int)sqrt(vision.length());
-            for (int fil = 0; fil < range; fil++){
-                for (int col = 0; col < range; col++){
-                    mapa.set(nueva, vision.getInt(fil*range+col));
-                    nueva.setX(nueva.getX()+1);
-                }
-                nueva.setX(nueva.getX()-range);
-                nueva.setY(nueva.getY()+1);
+        try{
+            if(!objetivo_encontrado){
+                objetivo_encontrado = obj_enc;
             }
+            
+            int n = vision.length();
+            Posicion nueva = new Posicion();
+            for(int xy = 0; xy < n; ++xy){
+                nueva.asign(mapa.getFromVector(pos, xy, n));
+                if(nueva.getX() >= 0 && nueva.getY() >= 0){
+                    mapa.set(nueva, vision.getInt(xy));
+                }
+            }
+        
         } catch (ExceptionBadParam | ExceptionNonInitialized ex) {
             System.out.println("Excepción en updateMap(). Mensaje: "+ex.getMessage());
         }
@@ -184,11 +183,11 @@ public class AgenteMapa extends SingleAgent{
     /**
      * Metodo que envia el mapa global a un vehiculo (fase de barrido).
      * @param vehiculo AgentID del vehículo a enviar el mapa
-     * @author Emilien, Jorge, Dani
+     * @author Emilien, Jorge, Dani, Javier Bejar Mendez
      */
     private void enviarMapa(AgentID vehiculo) {
         ACLMessage outbox = crearMensaje(getAid(), vehiculo, ACLMessage.INFORM,
-                jsonobj.encodeMapa(mapa, objetivo_encontrado),
+                jsonobj.encodeMapa(mapa, objetivo_encontrado, goal_pos),
                 conversation_id, "");
         send(outbox);
     }
@@ -267,8 +266,8 @@ public class AgenteMapa extends SingleAgent{
             try {
                 ACLMessage inbox = receiveACLMessage();
                 String command = jsonobj.decodeCommandVehiculo(inbox.getContent());
-                System.out.println("\nRecibido command "
-                    + command +" de "+inbox.getSender().getLocalName());
+                //System.out.println("\nRecibido command "
+                    //+ command +" de "+inbox.getSender().getLocalName());
                 switch (command) {
                     case "checked-in":
                         System.out.println("Recibida confirmación de que el vehiculo "
@@ -280,6 +279,18 @@ public class AgenteMapa extends SingleAgent{
                         Posicion pos_vehiculo = jsonobj.decodePos(inbox.getContent());
                         boolean obj_enc = jsonobj.decodeObjetivoEncontrado(inbox.getContent());
                         updateMap(vision, pos_vehiculo, obj_enc);
+                        if(obj_enc){
+                            goal_pos.asign(jsonobj.decodeGoalPos(inbox.getContent()));
+                        }
+                        try{
+                        System.out.println("Agente "+inbox.getSender().getLocalName()+" :"
+                            +"\nPos: ["+pos_vehiculo.getX()+","+pos_vehiculo.getY()+"]\nobj_enc: "+ obj_enc);
+                        if(obj_enc)
+                            System.out.println("Goal_Pos: ["+goal_pos.getX()+","+goal_pos.getY());
+                        
+                        }catch(Exception ex){
+                            System.out.println("Error print update-map"+ex.getMessage());
+                        }
                         if (turno_ocupado == false) {
                             //first time only
                             turno_ocupado = true;
@@ -288,7 +299,7 @@ public class AgenteMapa extends SingleAgent{
                             // add the id of the vehicule at the end of the list
                             vehiculoEsperando.add(inbox.getSender());
                         }
-                        System.out.println("Mapa global actualizado. Se envia a "+inbox.getSender().getLocalName());
+                        //System.out.println("Mapa global actualizado. Se envia a "+inbox.getSender().getLocalName());
                         break;
                     case "export-map":
                         exportarMapa();
@@ -319,7 +330,7 @@ public class AgenteMapa extends SingleAgent{
             } catch (InterruptedException ex) {
                 System.out.println("Excepción al recibir mensaje en execute(). Mensaje: "+ex.getMessage());
             }
-        } while((!objetivo_encontrado) || (numeroCancel <= 4));
+        } while(numeroCancel <= 4);
         
         
         System.out.println("Objetivo encontrado! o recibe 4 cancel de los vehiculos");
@@ -334,7 +345,7 @@ public class AgenteMapa extends SingleAgent{
      * @author Jorge
      */
     private void exportarMapa(){
-        jsonobj.exportMapa(mapa, objetivo_encontrado, iteracion+1, nameMap);
+        jsonobj.exportMapa(mapa, objetivo_encontrado, iteracion+1, nameMap, this.goal_pos);
     }
     
     /**
@@ -348,14 +359,16 @@ public class AgenteMapa extends SingleAgent{
     
     /**
      * 
-     * @author Jorge, Dani
+     * @author Jorge, Dani, Javier Bejar Mendez
      */
     private void actualizaDatosMapaImportado(){
         try {
             JSONObject obj = importarMapa();
             iteracion = obj.getInt("iteracion");
-            if (iteracion == 0)
+            if (iteracion == 0){
                 mapa = new Mapa(tam_mapa);
+                objetivo_encontrado = false;
+            }
             else
             {
                 mapa = new Mapa(1);
@@ -369,8 +382,15 @@ public class AgenteMapa extends SingleAgent{
                         m[fil][col] = (Integer)array.getInt(fil*tam+col);
                 
                 mapa.setMapa(m);
+                
+                objetivo_encontrado = obj.getBoolean("encontrado");
+            
+                if(objetivo_encontrado){
+                    this.goal_pos.setX(obj.getInt("xgoal"));
+                    this.goal_pos.setY(obj.getInt("ygoal"));
+                }
             }
-            objetivo_encontrado = obj.getBoolean("encontrado");
+            
         } catch (ExceptionBadParam ex) {
             System.out.println("Excepcion en actualizaDatosMapaImportado: "+ex.getMessage());
         }

@@ -84,7 +84,7 @@ public class Cardinal {
     }
     
     //El cardinal se iguala al siguiente
-    private void next() throws ExceptionNonInitialized{
+    public void next() throws ExceptionNonInitialized{
         try{
             switch(this.point){
                 case "n":
@@ -127,6 +127,78 @@ public class Cardinal {
         }
     
     }
+    
+    public void contrario(){
+        try{
+            switch(this.point){
+            case "n":
+                this.point = "s";
+                this.calcValue();
+                break;
+            case "s"  :
+                this.point = "n";
+                this.calcValue();
+                break;
+            case "o":
+                this.point = "e";
+                this.calcValue();
+                break;
+            case "e":
+                this.point = "o";
+                this.calcValue();
+                break;
+            default:
+                System.out.println("Error, no primario en contrario");
+            }
+        }catch(ExceptionNonInitialized ex){
+            System.out.println(ex.getMessage());
+        }
+    }
+    
+    //El cardinal se iguala al siguiente
+    public void prev() throws ExceptionNonInitialized{
+        try{
+            switch(this.point){
+                case "n":
+                    this.point = "no";
+                    this.calcValue();
+                    break;
+                case "s"  :
+                    this.point = "se";
+                    this.calcValue();
+                    break;
+                case "o":
+                    this.point = "so";
+                    this.calcValue();
+                    break;
+                case "e":
+                    this.point = "ne";
+                    this.calcValue();
+                    break;
+                case "no":
+                    this.point = "o";
+                    this.calcValue();
+                    break;
+                case "ne":
+                    this.point = "n";
+                    this.calcValue();
+                    break;
+                case "so"  :
+                    this.point = "s";
+                    this.calcValue();
+                    break;
+                case "se"  :
+                    this.point = "e";
+                    this.calcValue();
+                    break;
+                default:
+                    throw new ExceptionNonInitialized("Cardinal no inicializado al intentar next()");
+            }
+        }catch(ExceptionNonInitialized ex){
+            System.out.println(ex.getMessage());
+        }
+    
+    }
     //Comparaciones
     //Igualdad
     public boolean equals(Cardinal otro){
@@ -155,9 +227,12 @@ public class Cardinal {
         }
         else{
             this.point = card;
+            
             try{
                 this.calcValue();
+                
             }catch(ExceptionNonInitialized ex){
+                
                 System.out.println("Error en set:"+ex.getMessage());
             }
         }

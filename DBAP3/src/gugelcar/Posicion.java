@@ -120,4 +120,36 @@ public class Posicion {
     public void setY(Integer y){
         this.y = y;
     }
+    
+    public Posicion getForward(Cardinal card){
+        Posicion nueva = new Posicion();
+        try{
+            switch(card.get()){
+                case "n":
+                    nueva.setX(this.x);
+                    nueva.setY(this.y - 1);
+                    break;
+                case "s"  :
+                    nueva.setX(this.x);
+                    nueva.setY(this.y + 1);
+                    break;
+                case "o":
+                    nueva.setX(this.x - 1);
+                    nueva.setY(this.y);
+                    break;
+                case "e":
+                    nueva.setX(this.x + 1);
+                    nueva.setY(this.y);
+                    break;
+                
+                default:
+                    System.out.println("Solo admite e/o/s/n en getFordward()");
+            }
+        }catch(Exception ex){
+            System.out.println("Error en getForward(): "+ex.getMessage());
+        }
+        
+        return nueva;
+    
+    }
 }

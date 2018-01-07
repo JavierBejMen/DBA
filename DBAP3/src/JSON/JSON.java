@@ -82,6 +82,38 @@ public class JSON {
     }
     
     /**
+     * @author Javier Bejar Mendez
+     */
+    public String encodeGoalPos(Posicion goal){
+        JSONObject obj = new JSONObject();
+        try{
+            obj.put("xgoal", goal.getX());
+            obj.put("ygoal", goal.getY());
+        }catch(Exception ex){
+            System.out.println("Error en encodeGoalPos(): "+ex.getMessage());
+        }
+        
+        return obj.toString();
+    }
+    
+    
+    /**
+     * @author Javier Bejar Mendez
+     */
+    public Posicion decodeGoalPos(String json){
+        Posicion goal = new Posicion();
+        JSONObject obj = new JSONObject(json);
+        try{
+            goal.setX(obj.getInt("xgoal"));
+            goal.setY(obj.getInt("ygoal"));
+        }catch(Exception ex){
+            System.out.println("Error en decodeGoalPos(): "+ex.getMessage());
+        }
+       
+        return goal;
+    }
+    
+    /**
      * Decodifica un string JSON con las capabilities del agente. Devuelve
      * un ArrayList de objetos en este orden: 1º-fuelrate (int), 2º-range (int),
      * 3º-fly (boolean)
@@ -146,7 +178,7 @@ public class JSON {
      * @return String en formato JSON con las percepciones del vehiculo
      * @author Emilien Giard, Dani
      */
-    public String encodeUpdateMap(ArrayList<Integer> vision, Posicion pos, boolean obj_enc){
+    public String encodeUpdateMap(ArrayList<Integer> vision, Posicion pos, boolean obj_enc, Posicion goal){
         JSONObject obj = new JSONObject();
         try {
             obj.put("command", "update-map");
@@ -154,6 +186,10 @@ public class JSON {
             obj.put("x", pos.getX());
             obj.put("y", pos.getY());
             obj.put("objetivo_encontrado", obj_enc);
+            if(obj_enc){
+                obj.put("xgoal", goal.getX());
+                obj.put("ygoal", goal.getY());
+            }
         } catch (ExceptionNonInitialized ex) {
             System.out.println("Excepción en encodeUpdateMap(). Mensaje "+ex.getMessage());
         }
@@ -317,7 +353,7 @@ public class JSON {
      * @param obj_enc Booleano con si se ha encontrado el objetivo o no
      * @return String json con el formato {"mapa":[...], "tam":..., "objetivo_encontrado":...}
      */
-    public String encodeMapa(Mapa m, boolean obj_enc){
+    public String encodeMapa(Mapa m, boolean obj_enc, Posicion goal){
         JSONObject obj = new JSONObject();
         int tam = m.getTam();
         obj.put("objetivo_encontrado", obj_enc);
@@ -329,6 +365,14 @@ public class JSON {
             for (int col = 0; col < tam; col++)
                 array.put(matriz[fil][col]);
         obj.put("mapa",array);
+        if(obj_enc){
+            try{
+                obj.put("xgoal", goal.getX());
+                obj.put("ygoal", goal.getY());
+            }catch(Exception ex){
+                System.out.println("Error encode goal en encodeMapa(): "+ex.getMessage());
+            }
+        }
         return obj.toString();
     }
     
@@ -379,12 +423,18 @@ public class JSON {
 
      * @author Jorge, Dani
      */
-    public void exportMapa(Mapa map, boolean encontrado, int iteracion, String nombre_mapa){
+    public void exportMapa(Mapa map, boolean encontrado, int iteracion, String nombre_mapa, Posicion goal){
         JSONObject obj = new JSONObject();
         try{
             int tam = map.getTam();
             obj.put("iteracion", iteracion);
             obj.put("encontrado", encontrado);
+            try{
+            obj.put("xgoal", goal.getX());
+            obj.put("ygoal", goal.getY());
+            }catch(Exception ex){
+                System.out.println("goal nulo"+ex.getMessage());
+            }
             obj.put("tamanio", tam);
             JSONArray array = new JSONArray();
             for (int fil = 0; fil < tam; fil++)

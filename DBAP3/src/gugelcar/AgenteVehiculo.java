@@ -31,19 +31,25 @@ public class AgenteVehiculo extends SingleAgent{
     private int fuelrate;
     private int range;
     private boolean fly;
-    private boolean objetivo_encontrado;
-    private boolean estoy_en_objetivo;
+    private boolean objetivo_encontrado = false;
+    private boolean estoy_en_objetivo = false;
     private Posicion pos;
     private Mapa mapa;
+    private int dirbarrido;
+    private Cardinal orientacion;
+    private boolean first_move;
+    Posicion goal_pos;
+    int transicion_barrido = 0;
     
     //Comunicacion
     private JSON jsonobj;
     
     // Movimiento
-    private final int borde = 100000;
-    private final int objetivo = -100000;
-    private final int vehiculo = 100000;
-    private final int obstaculo = 10000;
+    private final int borde = -2;
+    private final int objetivo = 0;
+    private final int vehiculo = -4;
+    private int obstaculo = -1;
+    private final int libre = 1;
 
     /**
      * Define el tipo del agente según los parámetros recibidos por el servidor,
@@ -70,6 +76,9 @@ public class AgenteVehiculo extends SingleAgent{
         jsonobj = new JSON();
         pos = new Posicion();
         mapa = new Mapa(1);
+        first_move = true;
+        orientacion = new Cardinal();
+        goal_pos = new Posicion();
     }
     
     /**
@@ -84,6 +93,9 @@ public class AgenteVehiculo extends SingleAgent{
             ACLMessage inbox = receiveACLMessage();
             System.out.println("Vehículo "+getName()+" recibe estado del agente Mapa");
             objetivo_encontrado = jsonobj.decodeObjetivoEncontrado(inbox.getContent());
+            if(objetivo_encontrado){
+                this.goal_pos.asign(jsonobj.decodeGoalPos(inbox.getContent()));
+            }
             mapa = jsonobj.decodeMapa(inbox.getContent());
             conversation_id = inbox.getConversationId();
         } catch (InterruptedException ex) {
@@ -158,19 +170,27 @@ public class AgenteVehiculo extends SingleAgent{
      * @param percepciones String json con las percepciones del agente.
      * @todo actualizar el mapa de este agente con la respuesta recibida
      * del agente Mapa.
-     * @author Dani
+     * @author Dani, Javier Bejar Mendez
      */
     private void sendUpdateMap()
     {
         try {
-            int dist;
-            if (range == 3)
-                dist = 1;
-            else if (range == 5)
-                dist = 2;
-            else
-                dist = 5;
- 
+            
+            int n = range * range;
+            // Posicion siguiente a actualizar
+            Posicion pos_act = new Posicion();
+            ArrayList<Integer> vision = new ArrayList();
+  
+            for(int xy = 0; xy < n; ++xy){
+                pos_act.asign(mapa.getFromVector(pos, xy, n));
+                if(pos_act.getX() >= 0 && pos_act.getY() >= 0){
+                    vision.add(mapa.get(pos_act));
+                    
+                }else{
+                    vision.add(borde);
+                }
+            }
+            /*
             Posicion pos_enviar = new Posicion(pos.getX()-dist,pos.getY()-dist);
             ArrayList<Integer> vision = new ArrayList();
             boolean obj_enc = objetivo_encontrado;
@@ -185,14 +205,18 @@ public class AgenteVehiculo extends SingleAgent{
                 pos_enviar.setX(pos_enviar.getX()-range);
                 pos_enviar.setY(pos_enviar.getY()+1);
             }
+            */
             ACLMessage outbox = crearMensaje(getAid(),agente_mapa_id,ACLMessage.REQUEST,
-                    jsonobj.encodeUpdateMap(vision, pos, obj_enc), "", "");
+                    jsonobj.encodeUpdateMap(vision, pos, objetivo_encontrado, goal_pos), "", "");
             //System.out.println("Agente " + getName() + " envía updateMap con contenido: "
                     //+ outbox.getContent());
             send(outbox);
 
             ACLMessage inbox = receiveACLMessage();
             objetivo_encontrado = jsonobj.decodeObjetivoEncontrado(inbox.getContent());
+            if(objetivo_encontrado)
+                goal_pos.asign(jsonobj.decodeGoalPos(inbox.getContent()));
+            
             Mapa map = jsonobj.decodeMapa(inbox.getContent());
             mapa = map;
         } catch (InterruptedException | ExceptionNonInitialized | ExceptionBadParam ex) {
@@ -252,6 +276,7 @@ public class AgenteVehiculo extends SingleAgent{
                 nueva.setY(nueva.getY()+1);
             }
             m = pos.getMove(destino);
+            
             actualizarPosicion(destino);
         } catch (ExceptionBadParam | ExceptionNonInitialized ex) {
             System.out.println("Excepción en decidirExploracion(). Mensaje: " + ex.getMessage());
@@ -259,7 +284,192 @@ public class AgenteVehiculo extends SingleAgent{
         
         return m;
     }
+     /**
+      * 
+      * @author Javier Bejar Mendez 
+      */
+     private Movimiento decidirExploracionv2(){
+         Movimiento m = null;
+         Cardinal aux = new Cardinal();
+         Posicion nextPos = new Posicion();
+         int value;
+         boolean can_forward = true;
+         boolean change_orientacion = false;
+        try{
+            if(first_move){
+                if(pos.getY() == 0){
+                    orientacion.set("s");
+                    dirbarrido = -1;
+                }else{
+                    orientacion.set("n");
+                    dirbarrido = 1;
+                }
+                first_move = false;
+            }
+            //System.out.println("Agente "+this.getAid().getLocalName()+"("+orientacion.get()+") ["+pos.getX()+","+pos.getY()+"], forward: ["
+                    //+pos.getForward(orientacion).getX()+","+pos.getForward(orientacion).getY()+"]\n trans:"+this.transicion_barrido);
+            
+         
+            nextPos.asign(pos.getForward(orientacion));
+            if(this.transicion_barrido == 0){
+                if(nextPos.getX() >= 0 && nextPos.getY() >= 0){
+                    value = mapa.get(nextPos);
+                    if(value >= 0){
+                        //System.out.println("Avanzaaaaaaaaaaaaaaaaaaaaaaaaaa");
+                        m = pos.getMove(nextPos);
+                        actualizarPosicion(nextPos);
+                    }else{
+                        can_forward = false;
+                        this.transicion_barrido = this.range;
+                    }
+                }else{
+                    can_forward = false;
+                    this.transicion_barrido = this.range;
+                }
+                //System.out.println("orientacion:"+orientacion.get()+" pos: ["+pos.getX()+","+pos.getY()+"]");
+            }else{
+                can_forward = false;
+            }
+            
+            if(!can_forward){
+                
+                switch(dirbarrido){
+                    case -1:
+                        //System.out.println("preeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeev");
+                        aux.asign(orientacion);
+                        aux.prev();
+                        aux.prev();
+                        nextPos.asign(pos.getForward(aux));
+                        //System.out.println("orientacion aux:"+aux.get()+" pos: ["+nextPos.getX()+","+nextPos.getY()+"]");
+                        if(nextPos.getX() >= 0 && nextPos.getY() >= 0 && this.transicion_barrido > 0){
+                            value = mapa.get(nextPos);
+                            //System.out.println("value: "+value);
+                            if(value >= 0){
+                                m = pos.getMove(nextPos);
+                                actualizarPosicion(nextPos);
+                                this.transicion_barrido--;
+                                if(this.transicion_barrido == 0){
+                                    orientacion.contrario();
+                                    dirbarrido = 1;
+                                }
+                            }else{
+                                change_orientacion = true;
+                            }
+                        }else{
+                            change_orientacion = true;
+                        }
+                        
+                        if(change_orientacion){
+                            orientacion.next();
+                            orientacion.next();
+                            this.transicion_barrido = 0;
+                        }
+                        break;
+                        
+                    case 1:
+                        //System.out.println("neeeeeeeeeeeeeeeeeeeeeeeeeeeeeeext");
+                        aux.asign(orientacion);
+                        aux.next();
+                        aux.next();
+                       
+                        nextPos.asign(pos.getForward(aux));
+                        //System.out.println("orientacion aux:"+aux.get()+" pos: ["+nextPos.getX()+","+nextPos.getY()+"]");
+                        if(nextPos.getX() >= 0 && nextPos.getY() >= 0 && this.transicion_barrido > 0){
+                            value = mapa.get(nextPos);
+                            //System.out.println("value: "+value);
+                            if(value >= 0){
+                                m = pos.getMove(nextPos);
+                                actualizarPosicion(nextPos);
+                                this.transicion_barrido--;
+                                if(this.transicion_barrido == 0){
+                                    orientacion.contrario();
+                                    dirbarrido = -1;
+                                }
+                                
+                            }else{
+                                change_orientacion = true;
+                            }
+                        }else{
+                            change_orientacion = true;
+                        }
+                        
+                        if(change_orientacion){
+                            orientacion.prev();
+                            orientacion.prev();
+                            this.transicion_barrido = 0;
+                        }
+                        break;
+                    default:
+                        System.out.println("Error dirbarrido erroneo");
+                }
+                
+                
+            }
+        
+        } catch (Exception ex) {
+            System.out.println("Excepción en decidirExploracionv2(). Mensaje: " + ex.getMessage());
+        }
+         return m;
+     }
     
+     /**
+      * 
+      * @author Javier Bejar Mendez 
+      */
+     private Movimiento ir_objetivo(){
+         Movimiento m = null;
+         double mas_cercano = 999999;
+         Posicion aux_pos = new Posicion();
+         Posicion move_to = new Posicion();
+         double value = 0;
+         try{
+            
+            for(int xy = 0; xy < 9; ++xy){
+                aux_pos = mapa.getFromVector(pos, xy, 9);
+                if(aux_pos.getX() >= 0 && aux_pos.getY() >= 0 && aux_pos.getX() != pos.getX() && aux_pos.getY() != pos.getY()){
+                    if(mapa.get(aux_pos) >= 0){
+                        if(mapa.get(aux_pos) == 0){
+                            mas_cercano = 0;
+                            move_to.asign(aux_pos);
+                        }else{
+                            value = heuristica(aux_pos, goal_pos);
+                            if(value < mas_cercano){
+                            mas_cercano = value;
+                            move_to.asign(aux_pos);
+                            }
+                        }
+                    }
+                }
+            }
+         }catch(Exception ex){
+             System.out.println("Error en ir_objetivo(): "+ex.getMessage());
+         }
+         m = pos.getMove(move_to);
+         actualizarPosicion(move_to);
+         return m;
+     }
+     
+     /**
+      * Calcula la distancia en linea recta enre pos y goal
+      * @author Javier Bejar Mendez
+      */
+     private double heuristica(Posicion pos, Posicion goal){
+         double dist = -1;
+         double xaux = 0;
+         double yaux = 0;
+         try{
+             xaux = pos.getX() - goal.getX();
+             xaux *= xaux;
+             yaux = pos.getY() - goal.getY();
+             yaux *= yaux;
+             dist = Math.sqrt(xaux + yaux);
+             
+         }catch(Exception ex){
+             System.out.println("Error en heuristica: "+ex.getMessage());
+         }
+         return dist;
+     }
+     
     /** Actualiza la posicion actual del agente a la nueva y modifica
      * el valor de la casilla en el mapa sumando 1 para saber que ha pasado
      * por ahí.
@@ -267,7 +477,7 @@ public class AgenteVehiculo extends SingleAgent{
      */
     private void actualizarPosicion(Posicion nueva){
         try {
-            mapa.set(nueva, mapa.get(nueva)+5);
+            mapa.set(nueva, mapa.get(nueva)+1);
             pos.setX(nueva.getX());
             pos.setY(nueva.getY());
         } catch (ExceptionBadParam | ExceptionNonInitialized ex) {
@@ -280,25 +490,35 @@ public class AgenteVehiculo extends SingleAgent{
      * Por ejemplo, si una casilla es el límite del mundo, actualiza
      * el valor de dicha casilla a un valor muy alto para que el agente
      * sepa que no tiene que ir allí.
-     * @author Dani
+     * @author Dani, Javier Bejar Mendez
      * @param percepciones String con las percepciones del vehículo en formato
      * json.
      */
     private void actualizarMapaLocal(String percepciones){
         try {
-            int dist;
-            if (range == 3)
-                dist = 1;
-            else if (range == 5)
-                dist = 2;
-            else
-                dist = 5;
-            
+            int n = range * range;
             // Posicion siguiente a actualizar
-            Posicion pos_act = new Posicion(pos.getX()-dist,pos.getY()-dist);
+            Posicion pos_act = new Posicion();
             JSONArray radar = jsonobj.decodeRadar(percepciones);
             
-            // Actualizar el mapa con lo que se acaba de percibir
+            for(int xy = 0; xy < n; ++xy){
+                pos_act.asign(mapa.getFromVector(pos, xy, n));
+   
+                if(pos_act.getX() >= 0 && pos_act.getY() >= 0){
+                    switch(radar.getInt(xy)){
+                        case 0: mapa.set(pos_act, libre); break;
+                        case 1: mapa.set(pos_act, obstaculo); break;
+                        case 2: mapa.set(pos_act, borde); break;
+                        case 3: mapa.set(pos_act, objetivo);
+                                objetivo_encontrado = true;
+                                goal_pos.asign(pos_act);
+                            break;
+                        case 4: mapa.set(pos_act, vehiculo); break;
+                    }
+                }
+            }
+            
+            /*/ Actualizar el mapa con lo que se acaba de percibir
             for (int fil = 0; fil < range; fil++){
                 for (int col = 0; col < range; col++){
                     int valor_radar = radar.getInt(fil*range+col);
@@ -313,8 +533,8 @@ public class AgenteVehiculo extends SingleAgent{
                 }
                 pos_act.setX(pos_act.getX()-range);
                 pos_act.setY(pos_act.getY()+1);
-            }
-        } catch (ExceptionNonInitialized | ExceptionBadParam ex) {
+            }*/
+        } catch (Exception ex) {
             System.out.println("Excepción en actualizarMapaConPercepciones(). Mensaje: " + ex.getMessage());
         }
     }
@@ -324,7 +544,7 @@ public class AgenteVehiculo extends SingleAgent{
      * las variables de clase (bateria, energy...). Devuelve las percepciones en una
      * cadena JSON de la forma {"result":{"battery":"...", ....}}
      * @return Cadena JSON de la forma {"result":{"battery":"...", ....}} con las percepciones.
-     * @author Emilien, Dani
+     * @author Emilien, Dani, Javier Bejar Mendez
      */
     private String recibirPercepciones(){
         ACLMessage outbox = crearMensaje(getAid(), controlador_id, ACLMessage.QUERY_REF,
@@ -333,20 +553,21 @@ public class AgenteVehiculo extends SingleAgent{
         ACLMessage inbox = null;
         try {
             inbox = receiveACLMessage();
-            System.out.println("Vehículo " +getName()+ " envía query_ref al servidor "
-                    + "y recibe percepciones: " + inbox.getContent());
+            //System.out.println("Vehículo " +getName()+ " envía query_ref al servidor "
+                   // + "y recibe percepciones: " + inbox.getContent());
             if(inbox.getPerformativeInt() == ACLMessage.INFORM){
                 bateria = jsonobj.decodeBattery(inbox.getContent());
                 pos = jsonobj.decodeGPS(inbox.getContent());
-                pos.setX(pos.getX()+6); // Para que, al actualizar el mapa, no se salga
-                pos.setY(pos.getY()+6); // del rango de la matriz, desplazamos la posición
+                //pos.setX(pos.getX()+6); // Para que, al actualizar el mapa, no se salga
+                //pos.setY(pos.getY()+6); // del rango de la matriz, desplazamos la posición
                     // 6 casillas hacia abajo y hacia la derecha
                 estoy_en_objetivo = jsonobj.decodeGoal(inbox.getContent());
+                if(estoy_en_objetivo)objetivo_encontrado = true;
                 energy = jsonobj.decodeEnergy(inbox.getContent());
                 replyWith = inbox.getReplyWith();
             } else
                 System.out.println("Fallo en recibirPercepciones(). Details: " + jsonobj.decodeError(inbox.getPerformative()));
-        } catch (InterruptedException | ExceptionNonInitialized ex) {
+        } catch (InterruptedException ex) {
             System.out.println("Excepción en recibirDatos(). Error: "+ex.getMessage());
         }
         
@@ -383,8 +604,8 @@ public class AgenteVehiculo extends SingleAgent{
         
         try {
             ACLMessage inbox = receiveACLMessage();
-            System.out.println("Vehículo " +getName()+ " hace el movimiento " +m+
-                    " y recibe: "+inbox.getContent());
+            //System.out.println("Vehículo " +getName()+ " hace el movimiento " +m+
+                    //" y recibe: "+inbox.getContent());
             replyWith = inbox.getReplyWith();
 
             // Si el vehiculo CRASHED, hacemos un CANCEL (si un vehiculo crashed en un otro vehiculo, el otro vehiculo recibe UNREGISTERED cuando quiere mover)
@@ -425,15 +646,21 @@ public class AgenteVehiculo extends SingleAgent{
         
         String percepciones = recibirPercepciones(); // recibir percepciones del servidor
                                                          // y procesar la respuesta
-        
-        while ((!objetivo_encontrado || !estoy_en_objetivo) && quedaEnergia() && puedoMoverme())
+        if(this.tipo == AgentType.Drone)
+            this.obstaculo = 1;
+            
+        while ((!objetivo_encontrado && !estoy_en_objetivo) && quedaEnergia() && puedoMoverme())
         {
+            percepciones = recibirPercepciones(); // recibir percepciones del servidor
+                                                         // y procesar la respuesta
             actualizarMapaLocal(percepciones);
             sendUpdateMap();
             
             if (bateria <= fuelrate && quedaEnergia())
                refuel();
-            m = decidirExploracion();
+            do{
+                m = decidirExploracionv2();
+            }while(m == null);
             
             /*Jorge: (Alomejor esta parte no hace falta)Pseudocódigo para comprobar el turno
             pregunto a agentemapa por turno
@@ -444,7 +671,20 @@ public class AgenteVehiculo extends SingleAgent{
             */
             
             move(m);
-            percepciones = recibirPercepciones();
+            //percepciones = recibirPercepciones();
+        }
+        while(objetivo_encontrado && !estoy_en_objetivo  && quedaEnergia() && puedoMoverme()){
+            
+            percepciones = recibirPercepciones(); // recibir percepciones del servidor
+                                                         // y procesar la respuesta
+            actualizarMapaLocal(percepciones);
+            sendUpdateMap();
+            
+            if (bateria <= fuelrate && quedaEnergia())
+               refuel();
+            m = ir_objetivo();
+            
+            move(m);
         }
 
         makeCancel();

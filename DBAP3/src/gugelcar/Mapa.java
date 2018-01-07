@@ -44,13 +44,12 @@ public class Mapa {
         }catch(ExceptionNonInitialized ex){
             System.out.println("Error al acceder al mapa a traves de vector: "+ex.getMessage());
         }
-        x -= mid + xy%tam;
-        y = mid + xy/tam;
+        x += -mid + xy%tam;
+        y += -mid + xy/tam;
         
-        pos.setX(x);
-        pos.setY(y);
         
-        return pos;
+        
+        return new Posicion(x,y);
     }
     
     //Getters y Setters
