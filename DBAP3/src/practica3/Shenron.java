@@ -1,7 +1,7 @@
 /*
  * Realizado por: Daniel Díaz Pareja
  */
-package shenron;
+package practica3;
 
 import es.upv.dsic.gti_ia.core.ACLMessage;
 import es.upv.dsic.gti_ia.core.AgentID;
@@ -12,12 +12,12 @@ import java.util.Scanner;
  *
  * @author Dani
  */
-public class Agent extends SingleAgent {
+public class Shenron extends SingleAgent {
     private final AgentID shenron = new AgentID("Shenron");
     private final String user = "Boyero";
     private final String pass = "Parra";
     
-    public Agent(AgentID aid) throws Exception  {
+    public Shenron(AgentID aid) throws Exception  {
         super(aid);
     }
     

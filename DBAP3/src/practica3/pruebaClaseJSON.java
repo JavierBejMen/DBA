@@ -1,11 +1,11 @@
 /*
  * Realizado por: Daniel Díaz Pareja
  */
-package JSON;
+package practica3;
 
-import gugelcar.Mapa;
-import gugelcar.Movimiento;
-import gugelcar.Posicion;
+import practica3.Mapa;
+import practica3.Movimiento;
+import practica3.Posicion;
 import gugelcar.exceptions.ExceptionBadParam;
 import gugelcar.exceptions.ExceptionNonInitialized;
 import java.awt.Point;

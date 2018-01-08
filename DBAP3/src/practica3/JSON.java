@@ -4,8 +4,8 @@ biblioteca org.json:
 http://mvnrepository.com/artifact/org.json/json/20160810
 */
 
-package JSON;
-import gugelcar.Movimiento;
+package practica3;
+import practica3.Movimiento;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -13,8 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import gugelcar.Mapa;
-import gugelcar.Posicion;
+import practica3.Mapa;
+import practica3.Posicion;
 import gugelcar.exceptions.ExceptionBadParam;
 import gugelcar.exceptions.ExceptionNonInitialized;
 import java.io.BufferedReader;
