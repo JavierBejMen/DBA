@@ -174,7 +174,7 @@ public class AgenteMapa extends SingleAgent{
                     break;
             }
             // set la posicion del vehiculo
-            mapa.set(pos, 4);
+            mapa.set(pos, -4);
         } catch (ExceptionBadParam | ExceptionNonInitialized ex) {
             System.out.println("Excepción en updateMap(). Mensaje: "+ex.getMessage());
         }

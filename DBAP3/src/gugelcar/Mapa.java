@@ -26,10 +26,21 @@ public class Mapa {
         this.mapa = new Integer[TAM][TAM];
         for(int i = 0; i < tam; ++i){
             for(int j = 0; j < tam; ++j){
-                this.mapa[i][j] = -1;
+                this.mapa[i][j] = 1;
             }
         }
         
+    }
+    
+    public void incrementa(){
+        for(int i = 0; i < TAM; ++i){
+            for(int j = 0; j < TAM; ++j){
+                if(this.mapa[i][j] > 0){
+                    this.mapa[i][j]++;
+                }
+                
+            }
+        }
     }
     
     // Obtiene la posicion asociada a un vector relativa al parámetro pos

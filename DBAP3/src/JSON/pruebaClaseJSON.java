@@ -31,7 +31,7 @@ public class pruebaClaseJSON {
         System.out.println("Mapa: " +obj.get("mapa"));
 
 
-        parser.exportMapa(map, true, 1, "prueba.json");
+        //parser.exportMapa(map, true, 1, "prueba.json");
 
        
         // Encodes

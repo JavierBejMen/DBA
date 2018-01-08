@@ -317,7 +317,7 @@ public class AgenteVehiculo extends SingleAgent{
                     if(value >= 0){
                         //System.out.println("Avanzaaaaaaaaaaaaaaaaaaaaaaaaaa");
                         m = pos.getMove(nextPos);
-                        actualizarPosicion(nextPos);
+                        
                     }else{
                         can_forward = false;
                         this.transicion_barrido = this.range;
@@ -346,7 +346,7 @@ public class AgenteVehiculo extends SingleAgent{
                             //System.out.println("value: "+value);
                             if(value >= 0){
                                 m = pos.getMove(nextPos);
-                                actualizarPosicion(nextPos);
+                                
                                 this.transicion_barrido--;
                                 if(this.transicion_barrido == 0){
                                     orientacion.contrario();
@@ -379,7 +379,7 @@ public class AgenteVehiculo extends SingleAgent{
                             //System.out.println("value: "+value);
                             if(value >= 0){
                                 m = pos.getMove(nextPos);
-                                actualizarPosicion(nextPos);
+                                
                                 this.transicion_barrido--;
                                 if(this.transicion_barrido == 0){
                                     orientacion.contrario();
@@ -409,6 +409,9 @@ public class AgenteVehiculo extends SingleAgent{
         } catch (Exception ex) {
             System.out.println("Excepción en decidirExploracionv2(). Mensaje: " + ex.getMessage());
         }
+         if(m != null){
+             actualizarPosicion(nextPos);
+         }
          return m;
      }
     
@@ -477,7 +480,7 @@ public class AgenteVehiculo extends SingleAgent{
      */
     private void actualizarPosicion(Posicion nueva){
         try {
-            mapa.set(nueva, mapa.get(nueva)+1);
+            mapa.set(nueva, 1);
             pos.setX(nueva.getX());
             pos.setY(nueva.getY());
         } catch (ExceptionBadParam | ExceptionNonInitialized ex) {
@@ -506,7 +509,11 @@ public class AgenteVehiculo extends SingleAgent{
    
                 if(pos_act.getX() >= 0 && pos_act.getY() >= 0){
                     switch(radar.getInt(xy)){
-                        case 0: mapa.set(pos_act, libre); break;
+                        case 0: 
+                            if(mapa.get(pos_act) < 0){
+                                mapa.set(pos_act, libre);
+                            }
+                             break;
                         case 1: mapa.set(pos_act, obstaculo); break;
                         case 2: mapa.set(pos_act, borde); break;
                         case 3: mapa.set(pos_act, objetivo);
@@ -517,6 +524,8 @@ public class AgenteVehiculo extends SingleAgent{
                     }
                 }
             }
+            
+            mapa.incrementa();
             
             /*/ Actualizar el mapa con lo que se acaba de percibir
             for (int fil = 0; fil < range; fil++){
@@ -660,6 +669,7 @@ public class AgenteVehiculo extends SingleAgent{
                refuel();
             do{
                 m = decidirExploracionv2();
+                
             }while(m == null);
             
             /*Jorge: (Alomejor esta parte no hace falta)Pseudocódigo para comprobar el turno

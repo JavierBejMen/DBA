@@ -21,13 +21,13 @@ public class main {
     public static void main(String[] args) {
         System.out.println("Creando los agentes y recursos necesarios para lanzarlos");
         String controlador_name = "Cerastes";
-        String agente_mapa_name = "agente_mapa";
-        String vehiculo1_name = "veh_1";
-        String vehiculo2_name = "veh_2";
-        String vehiculo3_name = "veh_3";
-        String vehiculo4_name = "veh_4";
+        String agente_mapa_name = "ag_mapa";
+        String vehiculo1_name = "ve_1";
+        String vehiculo2_name = "ve_2";
+        String vehiculo3_name = "ve_3";
+        String vehiculo4_name = "ve_4";
         
-        String mapName = "map2";
+        String mapName = "map1";
         
         AgentID controlador_id, agente_mapa_id;
         ArrayList<AgentID> vehiculos = new ArrayList();
